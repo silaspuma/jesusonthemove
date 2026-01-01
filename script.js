@@ -553,3 +553,161 @@ function rotateBackgroundImage() {
 
 // Change image every 7 seconds
 setInterval(rotateBackgroundImage, 7000);
+
+// Firebase Authentication
+let currentUser = null;
+
+// Setup Firebase auth state listener
+function setupFirebase() {
+    if (!window.firebaseAuth) {
+        console.log('Firebase not initialized yet');
+        return;
+    }
+    
+    window.firebaseAuth.onAuthStateChanged((user) => {
+        currentUser = user;
+        if (user) {
+            showAccountProfile(user);
+        } else {
+            showLoginForm();
+        }
+    });
+}
+
+// Show account profile
+function showAccountProfile(user) {
+    document.getElementById('accountProfile').classList.remove('hidden');
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('signupForm').classList.add('hidden');
+    document.getElementById('userEmail').textContent = user.email;
+}
+
+// Show login form
+function showLoginForm() {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('signupForm').classList.add('hidden');
+    document.getElementById('accountProfile').classList.add('hidden');
+}
+
+// Login
+async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+        showNotification('please enter email and password');
+        return;
+    }
+    
+    try {
+        const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+        await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+        showNotification('logged in successfully');
+        closeAuthModal();
+    } catch (error) {
+        console.error('Login error:', error);
+        showNotification('login failed: ' + error.message);
+    }
+}
+
+// Sign up
+async function signup() {
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const confirm = document.getElementById('signupConfirm').value;
+    
+    if (!email || !password || !confirm) {
+        showNotification('please fill in all fields');
+        return;
+    }
+    
+    if (password !== confirm) {
+        showNotification('passwords do not match');
+        return;
+    }
+    
+    try {
+        const { createUserWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+        await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+        showNotification('account created successfully');
+        closeAuthModal();
+    } catch (error) {
+        console.error('Signup error:', error);
+        showNotification('signup failed: ' + error.message);
+    }
+}
+
+// Logout
+async function logout() {
+    try {
+        const { signOut } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js');
+        await signOut(window.firebaseAuth);
+        showNotification('logged out');
+        closeAuthModal();
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+}
+
+// Auth modal functions
+function openAuthModal() {
+    document.getElementById('authModal').classList.add('show');
+}
+
+function closeAuthModal() {
+    document.getElementById('authModal').classList.remove('show');
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('signupEmail').value = '';
+    document.getElementById('signupPassword').value = '';
+    document.getElementById('signupConfirm').value = '';
+}
+
+// Auth event listeners
+if (document.getElementById('accountButton')) {
+    document.getElementById('accountButton').addEventListener('click', openAuthModal);
+}
+if (document.getElementById('authModalClose')) {
+    document.getElementById('authModalClose').addEventListener('click', closeAuthModal);
+}
+if (document.getElementById('loginBtn')) {
+    document.getElementById('loginBtn').addEventListener('click', login);
+}
+if (document.getElementById('signupBtn')) {
+    document.getElementById('signupBtn').addEventListener('click', signup);
+}
+if (document.getElementById('logoutBtn')) {
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+}
+if (document.getElementById('switchToSignup')) {
+    document.getElementById('switchToSignup').addEventListener('click', () => {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('signupForm').classList.remove('hidden');
+    });
+}
+if (document.getElementById('switchToLogin')) {
+    document.getElementById('switchToLogin').addEventListener('click', () => {
+        document.getElementById('signupForm').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+    });
+}
+if (document.getElementById('authModal')) {
+    document.getElementById('authModal').addEventListener('click', (e) => {
+        if (e.target.id === 'authModal') {
+            closeAuthModal();
+        }
+    });
+}
+
+// Setup Firebase when available
+setTimeout(() => {
+    setupFirebase();
+}, 500);
+
+// Hide loading screen after 1 second
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const loadingScreen = document.getElementById('loadingScreen');
+        loadingScreen.classList.add('hidden');
+    }, 1000);
+});
