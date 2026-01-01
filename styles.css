@@ -1,0 +1,236 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #b8a58e;
+    --primary-hover: #a39280;
+    --text-dark: #5a4a3a;
+    --text-light: #8b7b6b;
+    --background: #f5f3f0;
+    --white: #ffffff;
+    --cream: #e8e3dc;
+    --beige: #d4cdc3;
+    --tan: #b8a58e;
+    --shadow-sm: 0 1px 3px 0 rgba(90, 74, 58, 0.08), 0 1px 2px -1px rgba(90, 74, 58, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(90, 74, 58, 0.08), 0 2px 4px -2px rgba(90, 74, 58, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(90, 74, 58, 0.08), 0 4px 6px -4px rgba(90, 74, 58, 0.06);
+    --shadow-xl: 0 20px 25px -5px rgba(90, 74, 58, 0.1), 0 8px 10px -6px rgba(90, 74, 58, 0.08);
+    --border-radius: 20px;
+}
+
+@font-face {
+    font-family: 'Bropella';
+    src: url('Bropella.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'Playfair Display', Georgia, serif;
+    background: linear-gradient(135deg, #f5f3f0 0%, #e8e3dc 50%, #d4cdc3 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    color: var(--text-dark);
+}
+
+.titlebar {
+    background: var(--white);
+    padding: 20px 40px;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-family: 'Bropella', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--text-dark);
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.container {
+    max-width: 700px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 60px 20px 20px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+main {
+    position: relative;
+    width: 100%;
+}
+
+.verse-box {
+    background: var(--white);
+    padding: 50px 40px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-xl);
+    margin-bottom: 20px;
+}
+
+.verse-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.6rem;
+    line-height: 1.8;
+    color: var(--text-dark);
+    margin-bottom: 25px;
+    font-weight: 400;
+}
+
+.verse-reference {
+    font-size: 1rem;
+    color: var(--text-light);
+    font-weight: 600;
+    text-align: right;
+    letter-spacing: 0.5px;
+}
+
+.button-container {
+    display: flex;
+    gap: 15px;
+    align-items: stretch;
+}
+
+.save-button {
+    flex: 1;
+    background: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 18px 32px;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-shadow: var(--shadow-md);
+    font-family: 'Playfair Display', serif;
+}
+
+.save-button:hover {
+    background: var(--primary-hover);
+    box-shadow: var(--shadow-lg);
+}
+
+.save-button.saved {
+    background: #8b7b6b;
+}
+
+.save-button.saved:hover {
+    background: #7a6b5b;
+}
+
+.share-button {
+    background: var(--white);
+    border: none;
+    padding: 18px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+
+.share-button:hover {
+    background: var(--cream);
+    box-shadow: var(--shadow-lg);
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    stroke-width: 2.5;
+}
+
+footer {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.date {
+    color: var(--text-light);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.notification {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--tan);
+    color: var(--white);
+    padding: 16px 28px;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: var(--shadow-xl);
+}
+
+.notification.show {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .title {
+        font-size: 2.2rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .verse-box {
+        padding: 35px 28px;
+    }
+
+    .verse-text {
+        font-size: 1.35rem;
+    }
+
+    .save-button {
+        padding: 16px 24px;
+        font-size: 1rem;
+    }
+
+    .share-button {
+        padding: 16px 18px;
+    }
+
+    .icon {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 1.8rem;
+    }
+
+    .verse-text {
+        font-size: 1.2rem;
+    }
+
+    .button-container {
+        gap: 12px;
+    }
+}
