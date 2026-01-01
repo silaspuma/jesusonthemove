@@ -259,7 +259,7 @@ function updateSaveButton() {
         saveButton.querySelector('span').textContent = 'saved';
     } else {
         saveButton.classList.remove('saved');
-        saveButton.querySelector('span').textContent = 'Save';
+        saveButton.querySelector('span').textContent = 'save';
     }
 }
 
