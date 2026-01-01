@@ -4,6 +4,14 @@ const API_BASE_URL = 'https://rest.api.bible/v1';
 const BIBLE_ID = 'de4e12af7f28f599-02'; // KJV Bible
 
 let currentVerse = {};
+let streakData = {
+    currentStreak: 0,
+    lastVisit: null,
+    history: []
+};
+let hasMarkedToday = false;
+let firestoreApi = null;
+const STREAK_HISTORY_DAYS = 62; // keep enough days to render full months
 
 // Get today's date string (YYYY-MM-DD) in UTC
 function getTodayString() {
@@ -247,6 +255,211 @@ function displayDate() {
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', options);
+}
+
+// ---------- Streak helpers ----------
+
+function toDateStringUTC(dateObj) {
+    const year = dateObj.getUTCFullYear();
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function isSameDay(a, b) {
+    return a === b;
+}
+
+function isYesterday(lastDate, today) {
+    const date = new Date(`${lastDate}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + 1);
+    return toDateStringUTC(date) === today;
+}
+
+function trimHistory(history) {
+    if (!Array.isArray(history)) return [];
+    const unique = Array.from(new Set(history));
+    const sorted = unique.sort();
+    return sorted.slice(-STREAK_HISTORY_DAYS);
+}
+
+async function loadFirestoreApi() {
+    if (firestoreApi) return firestoreApi;
+    if (!window.firebaseDb) return null;
+    try {
+        firestoreApi = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        return firestoreApi;
+    } catch (err) {
+        console.error('failed to load firestore api', err);
+        return null;
+    }
+}
+
+function getUserDocRef(uid, { doc }) {
+    return doc(window.firebaseDb, 'users', uid);
+}
+
+async function loadStreakData(uid) {
+    const api = await loadFirestoreApi();
+    if (!api || !uid) {
+        const local = localStorage.getItem('streakData');
+        streakData = local ? JSON.parse(local) : { currentStreak: 0, lastVisit: null, history: [] };
+        return;
+    }
+
+    const { getDoc } = api;
+    const ref = getUserDocRef(uid, api);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+        const data = snap.data();
+        streakData = {
+            currentStreak: data.currentStreak || 0,
+            lastVisit: data.lastVisit || null,
+            history: data.history || []
+        };
+    } else {
+        streakData = { currentStreak: 0, lastVisit: null, history: [] };
+    }
+}
+
+async function saveStreakData(uid) {
+    streakData.history = trimHistory(streakData.history);
+    const api = await loadFirestoreApi();
+    if (!api || !uid) {
+        localStorage.setItem('streakData', JSON.stringify(streakData));
+        return;
+    }
+    const { setDoc } = api;
+    const ref = getUserDocRef(uid, api);
+    await setDoc(ref, {
+        currentStreak: streakData.currentStreak,
+        lastVisit: streakData.lastVisit,
+        history: streakData.history
+    }, { merge: true });
+}
+
+async function updateStreakForToday(uid) {
+    const today = getTodayString();
+    const historySet = new Set(streakData.history || []);
+
+    if (streakData.lastVisit && isSameDay(streakData.lastVisit, today)) {
+        return false;
+    }
+
+    const continued = streakData.lastVisit && isYesterday(streakData.lastVisit, today);
+    streakData.currentStreak = continued ? (streakData.currentStreak || 0) + 1 : 1;
+    streakData.lastVisit = today;
+    historySet.add(today);
+    streakData.history = Array.from(historySet);
+    await saveStreakData(uid);
+    hasMarkedToday = true;
+    return true;
+}
+
+function setAccountButtonDefault() {
+    const btn = document.getElementById('accountButton');
+    if (!btn) return;
+    btn.classList.remove('streak-mode', 'animating');
+    btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+    `;
+    btn.setAttribute('aria-label', 'account');
+}
+
+function setAccountButtonStreak() {
+    const btn = document.getElementById('accountButton');
+    if (!btn) return;
+    btn.classList.add('streak-mode');
+    btn.innerHTML = `
+        <div class="streak-ring">
+            <svg class="streak-fire-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2C12 2 7 7 7 12C7 15.866 9.686 19 12 19C14.314 19 17 15.866 17 12C17 9 14 7 14 7C14 7 14.5 10 12 12C10.5 10.5 11 7.5 12 6.5C13 5.5 12 2 12 2Z" fill="currentColor" stroke="currentColor"></path>
+            </svg>
+        </div>
+    `;
+    btn.setAttribute('aria-label', 'view streak');
+}
+
+function triggerStreakAnimation() {
+    const btn = document.getElementById('accountButton');
+    if (!btn) return;
+    btn.classList.remove('animating');
+    // Force reflow so animation restarts
+    void btn.offsetWidth;
+    btn.classList.add('animating');
+    setTimeout(() => btn.classList.remove('animating'), 1400);
+}
+
+function renderStreakPanel() {
+    const calendarEl = document.getElementById('streakCalendar');
+    const daysEl = document.getElementById('streakPanelDays');
+    if (!calendarEl || !daysEl) return;
+
+    const today = new Date();
+    const historySet = new Set(streakData.history || []);
+    const year = today.getUTCFullYear();
+    const month = today.getUTCMonth();
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+
+    const items = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(Date.UTC(year, month, day));
+        const iso = toDateStringUTC(date);
+        const completed = historySet.has(iso);
+        const weekday = date.toLocaleDateString('en-US', { weekday: 'short' }).toLowerCase();
+        items.push(`
+            <div class="streak-day ${completed ? 'done' : 'missed'}">
+                <div class="day-fire">${completed ? '🔥' : '—'}</div>
+                <div class="day-number">${day}</div>
+                <div class="day-label">${weekday}</div>
+            </div>
+        `);
+    }
+
+    calendarEl.innerHTML = items.join('');
+    const count = streakData.currentStreak || 0;
+    daysEl.textContent = `${count} day${count === 1 ? '' : 's'}`;
+}
+
+function updateStreakUI(loggedIn) {
+    if (loggedIn) {
+        setAccountButtonStreak();
+        renderStreakPanel();
+    } else {
+        setAccountButtonDefault();
+        closeStreakPanel();
+    }
+}
+
+function openStreakPanel() {
+    const panel = document.getElementById('streakPanel');
+    const backdrop = document.getElementById('streakPanelBackdrop');
+    if (!panel || !backdrop) return;
+    renderStreakPanel();
+    panel.classList.remove('hidden');
+    backdrop.classList.remove('hidden');
+}
+
+function closeStreakPanel() {
+    const panel = document.getElementById('streakPanel');
+    const backdrop = document.getElementById('streakPanelBackdrop');
+    if (!panel || !backdrop) return;
+    panel.classList.add('hidden');
+    backdrop.classList.add('hidden');
+}
+
+function toggleStreakPanel() {
+    const panel = document.getElementById('streakPanel');
+    if (!panel) return;
+    const isOpen = !panel.classList.contains('hidden');
+    if (isOpen) {
+        closeStreakPanel();
+    } else {
+        openStreakPanel();
+    }
 }
 
 // Show notification
@@ -564,11 +777,20 @@ function setupFirebase() {
         return;
     }
     
-    window.firebaseAuth.onAuthStateChanged((user) => {
+    window.firebaseAuth.onAuthStateChanged(async (user) => {
         currentUser = user;
         if (user) {
             showAccountProfile(user);
+            await loadStreakData(user.uid);
+            const addedToday = await updateStreakForToday(user.uid);
+            updateStreakUI(true);
+            if (addedToday) {
+                triggerStreakAnimation();
+            }
         } else {
+            hasMarkedToday = false;
+            streakData = { currentStreak: 0, lastVisit: null, history: [] };
+            updateStreakUI(false);
             showLoginForm();
         }
     });
@@ -665,7 +887,13 @@ function closeAuthModal() {
 
 // Auth event listeners
 if (document.getElementById('accountButton')) {
-    document.getElementById('accountButton').addEventListener('click', openAuthModal);
+    document.getElementById('accountButton').addEventListener('click', () => {
+        if (currentUser) {
+            toggleStreakPanel();
+        } else {
+            openAuthModal();
+        }
+    });
 }
 if (document.getElementById('authModalClose')) {
     document.getElementById('authModalClose').addEventListener('click', closeAuthModal);
@@ -697,6 +925,14 @@ if (document.getElementById('authModal')) {
             closeAuthModal();
         }
     });
+}
+
+// Streak panel events
+if (document.getElementById('streakPanelClose')) {
+    document.getElementById('streakPanelClose').addEventListener('click', closeStreakPanel);
+}
+if (document.getElementById('streakPanelBackdrop')) {
+    document.getElementById('streakPanelBackdrop').addEventListener('click', closeStreakPanel);
 }
 
 // Setup Firebase when available

@@ -51,6 +51,28 @@
         </button>
     </div>
 
+    <!-- Streak panel (shown when logged in) -->
+    <div class="streak-panel-backdrop hidden" id="streakPanelBackdrop"></div>
+    <div class="streak-panel hidden" id="streakPanel">
+        <button class="streak-close" id="streakPanelClose" aria-label="close streak panel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <div class="streak-panel-hero">
+            <div class="streak-hero-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M12 2C12 2 7 7 7 12C7 15.866 9.686 19 12 19C14.314 19 17 15.866 17 12C17 9 14 7 14 7C14 7 14.5 10 12 12C10.5 10.5 11 7.5 12 6.5C13 5.5 12 2 12 2Z" fill="currentColor" stroke="currentColor"></path>
+                </svg>
+            </div>
+            <div class="streak-hero-count" id="streakPanelDays">0 days</div>
+            <div class="streak-hero-label">your streak</div>
+        </div>
+        <div class="streak-calendar" id="streakCalendar"></div>
+        <div class="streak-panel-footer">tap a day to reflect</div>
+    </div>
+
     <div class="container">
         <main>
             <div class="verse-box" id="verseBox">
