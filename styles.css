@@ -45,6 +45,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    text-align: center;
 }
 
 .logo {
@@ -78,6 +79,10 @@ main {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-xl);
     margin-bottom: 20px;
+    min-height: 40vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .verse-text {
@@ -190,24 +195,34 @@ footer {
 }
 
 @media (max-width: 768px) {
-    .title {
-        font-size: 2.2rem;
+    .titlebar {
+        padding: 18px 25px;
     }
 
-    .subtitle {
-        font-size: 1rem;
+    .logo {
+        font-size: 1.5rem;
+    }
+
+    .container {
+        padding: 40px 20px 20px;
     }
 
     .verse-box {
-        padding: 35px 28px;
+        padding: 35px 25px;
+        min-height: 45vh;
     }
 
     .verse-text {
-        font-size: 1.35rem;
+        font-size: 1.5rem;
+        line-height: 1.7;
+    }
+
+    .verse-reference {
+        font-size: 0.9rem;
     }
 
     .save-button {
-        padding: 16px 24px;
+        padding: 16px 28px;
         font-size: 1rem;
     }
 
@@ -219,18 +234,72 @@ footer {
         width: 22px;
         height: 22px;
     }
+
+    footer {
+        padding: 25px 20px;
+    }
 }
 
 @media (max-width: 480px) {
-    .title {
-        font-size: 1.8rem;
+    .titlebar {
+        padding: 16px 20px;
+    }
+
+    .logo {
+        font-size: 1.6rem;
+    }
+
+    .container {
+        padding: 30px 15px 15px;
+    }
+
+    .verse-box {
+        padding: 35px 22px;
+        margin-bottom: 15px;
+        min-height: auto;
     }
 
     .verse-text {
-        font-size: 1.2rem;
+        font-size: 1.45rem;
+        line-height: 1.65;
+        margin-bottom: 20px;
+    }
+
+    .verse-reference {
+        font-size: 0.85rem;
     }
 
     .button-container {
-        gap: 12px;
+        gap: 10px;
+    }
+
+    .save-button {
+        padding: 14px 20px;
+        font-size: 0.95rem;
+        gap: 10px;
+    }
+
+    .share-button {
+        padding: 14px 16px;
+    }
+
+    .icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    footer {
+        padding: 20px 15px;
+    }
+
+    .date {
+        font-size: 0.85rem;
+    }
+
+    .notification {
+        bottom: 20px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        max-width: 90%;
     }
 }

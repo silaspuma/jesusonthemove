@@ -1,20 +1,9 @@
 // API.bible configuration
-const API_KEY = 'ulKy7sztP3_MN-GQn4z-FM';
+const API_KEY = 'ulKy7sztP3_MN-GQn4z-F';
 const API_BASE_URL = 'https://api.scripture.api.bible/v1';
 const BIBLE_ID = 'de4e12af7f28f599-02'; // KJV Bible
 
 let currentVerse = {};
-
-// Curated list of popular/meaningful verse references for daily rotation
-const verseReferences = [
-    'JHN.3.16', 'PHP.4.13', 'PRO.3.5-PRO.3.6', 'PSA.23.1-PSA.23.3', 
-    'JOS.1.9', 'ROM.8.28', 'PHP.4.6', 'PSA.34.18', 'ISA.40.31', 
-    'JER.29.11', '1PE.5.7', 'EXO.14.14', 'JHN.14.27', '1TH.5.16-1TH.5.18',
-    'MAT.11.28', 'NUM.6.24-NUM.6.26', 'GAL.5.22-GAL.5.23', 'MAT.6.25',
-    'PSA.27.1', 'ISA.40.29', '1JN.1.9', 'MAT.18.20', 'JHN.16.33',
-    '1CO.13.4-1CO.13.5', 'MAT.5.16', 'PRO.18.10', 'LAM.3.21-LAM.3.22',
-    'MAT.7.7', 'MAT.6.33', 'ZEP.3.17', 'ROM.12.2'
-];
 
 // Get today's date string (YYYY-MM-DD)
 function getTodayString() {
@@ -22,32 +11,56 @@ function getTodayString() {
     return today.toISOString().split('T')[0];
 }
 
-// Get verse reference for today based on day of year
-function getTodaysVerseReference() {
+// Curated list of verses for daily rotation
+const verseIds = [
+    'JHN.3.16', 'ROM.8.28', 'PSA.23.1', 'MAT.11.28', 'JER.29.11',
+    'PHP.4.13', 'ISA.40.31', 'JOS.1.9', 'GAL.5.22', 'EPH.3.16',
+    'ROM.12.2', 'JHN.14.27', '1PE.5.7', 'PSA.27.1', 'HEB.11.1',
+    'JHN.10.10', '2TI.1.7', 'ROM.6.9', 'MAT.6.33', '1JN.4.7',
+    'PRO.3.5-3.6', 'PSA.34.18', 'COL.3.16', 'PHP.4.6', '1TH.5.16',
+    'MAT.5.16', 'LAM.3.22-3.23', 'JHN.8.32', 'ROM.3.23', 'JHN.1.1',
+    'ROM.10.9', '1CO.13.4', '2CO.5.17', 'GAL.2.20', 'EPH.2.8',
+    'PHP.2.5', 'COL.1.15', '1TH.4.16', '2TI.2.15', 'TIT.2.11',
+    'HEB.12.2', 'JAS.1.17', '1PE.1.3', '2PE.1.3', '1JN.1.9'
+];
+
+// Get verse of the day based on date
+function getTodaysVerseId() {
     const today = new Date();
     const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-    const index = dayOfYear % verseReferences.length;
-    return verseReferences[index];
+    const index = dayOfYear % verseIds.length;
+    return verseIds[index];
 }
 
-// Fetch verse from API.bible
-async function fetchVerseFromAPI(verseReference) {
+// Fetch verse of the day from API.bible
+async function fetchVerseOfDay() {
     try {
-        const response = await fetch(`${API_BASE_URL}/bibles/${BIBLE_ID}/passages/${verseReference}?content-type=text&include-notes=false&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false&include-verse-spans=false`, {
+        const verseId = getTodaysVerseId();
+        const url = `${API_BASE_URL}/bibles/${BIBLE_ID}/passages/${verseId}?content-type=text&include-notes=false&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false&include-verse-spans=false`;
+        
+        console.log('Fetching verse from:', url);
+        
+        const response = await fetch(url, {
             headers: {
                 'api-key': API_KEY
             }
         });
 
+        console.log('Response status:', response.status);
+
         if (!response.ok) {
-            throw new Error('Failed to fetch verse');
+            const errorData = await response.text();
+            console.error('API Error:', errorData);
+            throw new Error(`API returned status ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('API response:', data);
+        
         const passage = data.data.content;
         const reference = data.data.reference;
 
-        // Clean up the text (remove extra whitespace and newlines)
+        // Clean up the text
         const cleanText = passage.trim().replace(/\s+/g, ' ');
 
         return {
@@ -55,7 +68,7 @@ async function fetchVerseFromAPI(verseReference) {
             reference: reference
         };
     } catch (error) {
-        console.error('Error fetching verse:', error);
+        console.error('Error fetching verse of the day:', error);
         // Fallback verse if API fails
         return {
             text: "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.",
@@ -77,9 +90,8 @@ async function getTodaysVerse() {
         }
     }
 
-    // Otherwise, fetch from API (only once per day)
-    const verseRef = getTodaysVerseReference();
-    const verse = await fetchVerseFromAPI(verseRef);
+    // Otherwise, fetch verse of the day from API (only once per day)
+    const verse = await fetchVerseOfDay();
 
     // Cache the verse with today's date
     localStorage.setItem('dailyVerse', JSON.stringify({
@@ -147,7 +159,7 @@ function saveVerse() {
             savedDate: new Date().toISOString()
         });
         localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
-        showNotification('Verse saved! 📖');
+        showNotification('Verse saved');
         updateSaveButton();
     } else {
         // Remove from saved
@@ -169,7 +181,7 @@ async function shareVerse() {
                 text: shareText,
                 url: window.location.href
             });
-            showNotification('Verse shared! 🙏');
+            showNotification('Verse shared');
         } catch (err) {
             if (err.name !== 'AbortError') {
                 copyToClipboard(shareText);
@@ -184,7 +196,7 @@ async function shareVerse() {
 function copyToClipboard(text) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(() => {
-            showNotification('Verse copied to clipboard! 📋');
+            showNotification('Verse copied to clipboard');
         }).catch(() => {
             showNotification('Unable to copy verse');
         });
@@ -198,7 +210,7 @@ function copyToClipboard(text) {
         textArea.select();
         try {
             document.execCommand('copy');
-            showNotification('Verse copied to clipboard! 📋');
+            showNotification('Verse copied to clipboard');
         } catch (err) {
             showNotification('Unable to copy verse');
         }
