@@ -5,10 +5,13 @@ const BIBLE_ID = 'de4e12af7f28f599-02'; // KJV Bible
 
 let currentVerse = {};
 
-// Get today's date string (YYYY-MM-DD)
+// Get today's date string (YYYY-MM-DD) in UTC
 function getTodayString() {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    const year = today.getUTCFullYear();
+    const month = String(today.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(today.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 // Large curated list of meaningful verses for daily rotation (365+ verses)
@@ -131,11 +134,25 @@ const verseIds = [
     '2JN.1.6'
 ];
 
-// Get verse of the day based on date
+// Get verse of the day based on UTC date (same for everyone worldwide)
 function getTodaysVerseId() {
-    const today = new Date();
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
-    const index = dayOfYear % verseIds.length;
+    const now = new Date();
+    // Use UTC date to ensure everyone sees the same verse regardless of timezone
+    const year = now.getUTCFullYear();
+    const month = now.getUTCMonth();
+    const day = now.getUTCDate();
+    
+    // Create a seed from the date (YYYYMMDD format)
+    const seed = year * 10000 + (month + 1) * 100 + day;
+    
+    // Simple seeded random function
+    const random = (seed) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+    };
+    
+    // Use seed to pick a random verse that will be the same for everyone today
+    const index = Math.floor(random(seed) * verseIds.length);
     return verseIds[index];
 }
 
@@ -254,12 +271,18 @@ function isVerseSaved() {
 // Update save button state
 function updateSaveButton() {
     const saveButton = document.getElementById('saveButton');
+    const iconSvg = saveButton.querySelector('svg');
+    
     if (isVerseSaved()) {
         saveButton.classList.add('saved');
-        saveButton.querySelector('span').textContent = 'saved';
+        // Change to filled bookmark
+        iconSvg.innerHTML = `<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="currentColor" stroke="currentColor"></path>`;
+        saveButton.setAttribute('aria-label', 'Unsave verse');
     } else {
         saveButton.classList.remove('saved');
-        saveButton.querySelector('span').textContent = 'save';
+        // Change to outline bookmark
+        iconSvg.innerHTML = `<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>`;
+        saveButton.setAttribute('aria-label', 'Save verse');
     }
 }
 
@@ -336,7 +359,155 @@ function copyToClipboard(text) {
 // Event listeners
 document.getElementById('saveButton').addEventListener('click', saveVerse);
 document.getElementById('shareButton').addEventListener('click', shareVerse);
+document.getElementById('savedVersesButton').addEventListener('click', toggleSavedVerses);
+
+// Toggle saved verses view
+function toggleSavedVerses() {
+    const savedView = document.getElementById('savedVersesView');
+    const isShowing = savedView.classList.contains('active');
+    
+    if (isShowing) {
+        hideSavedVerses();
+    } else {
+        showSavedVerses();
+    }
+}
+
+// Show saved verses with animation
+function showSavedVerses() {
+    const verseBox = document.getElementById('verseBox');
+    const dailyView = document.getElementById('dailyVerseView');
+    const savedView = document.getElementById('savedVersesView');
+    const savedButton = document.getElementById('savedVersesButton');
+    const savedContainer = document.getElementById('savedVersesContainer');
+    const savedVerses = JSON.parse(localStorage.getItem('savedVerses') || '[]');
+    
+    console.log('Saved verses:', savedVerses);
+    
+    // Transform button to X icon
+    const iconSvg = savedButton.querySelector('.icon');
+    iconSvg.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+    savedButton.classList.add('showing-close');
+    
+    // Hide daily verse
+    dailyView.classList.add('hidden');
+    
+    // Populate saved verses
+    if (savedVerses.length === 0) {
+        savedContainer.innerHTML = '<p class="no-verses">No saved verses yet. Save a verse to see it here!</p>';
+    } else {
+        savedContainer.innerHTML = savedVerses.map((verse, index) => {
+            const date = new Date(verse.savedDate);
+            const dateStr = date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // Escape HTML to prevent breaking the template
+            const escapeHtml = (text) => {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            };
+            
+            return `
+                <div class="saved-verse-item">
+                    <p class="saved-verse-text">"${escapeHtml(verse.text)}"</p>
+                    <p class="saved-verse-reference">${escapeHtml(verse.reference)}</p>
+                    <p class="saved-verse-date">Saved on ${dateStr}</p>
+                    <button class="delete-saved-verse" onclick="deleteSavedVerse(${index})">Remove</button>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // Show saved verses view
+    verseBox.classList.add('showing-saved');
+    savedView.classList.add('active');
+}
+
+// Hide saved verses with reverse animation
+function hideSavedVerses() {
+    const verseBox = document.getElementById('verseBox');
+    const dailyView = document.getElementById('dailyVerseView');
+    const savedView = document.getElementById('savedVersesView');
+    const savedButton = document.getElementById('savedVersesButton');
+    
+    // Restore button to library icon
+    const iconSvg = savedButton.querySelector('.icon');
+    iconSvg.innerHTML = '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>';
+    savedButton.classList.remove('showing-close');
+    
+    // Hide saved verses view
+    savedView.classList.remove('active');
+    verseBox.classList.remove('showing-saved');
+    
+    // Show daily verse
+    dailyView.classList.remove('hidden');
+}
+
+// Delete a saved verse
+function deleteSavedVerse(index) {
+    const savedVerses = JSON.parse(localStorage.getItem('savedVerses') || '[]');
+    const deletedVerse = savedVerses[index];
+    savedVerses.splice(index, 1);
+    localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
+    
+    // Update save button if current verse was deleted
+    if (deletedVerse.reference === currentVerse.reference) {
+        updateSaveButton();
+    }
+    
+    // Refresh saved verses view
+    showSavedVerses();
+    showNotification('Verse removed');
+}
 
 // Initialize
 displayVerse();
 displayDate();
+
+// Hide loading screen after 1 second
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const loadingScreen = document.getElementById('loadingScreen');
+        loadingScreen.classList.add('hidden');
+    }, 1000);
+});
+
+// Background image slideshow
+const backgroundImages = [
+    'calming1.jpg',
+    'calming2.jpg',
+    'calming3.jpg',
+    'calming4.jpg',
+    'calming5.jpg',
+    'calming6.jpg',
+    'calming7.jpg',
+    'calming8.jpg',
+    'calming9.jpg',
+    'calming10.jpg'
+];
+
+let currentImageIndex = 0;
+let currentBgElement = 1;
+
+// Initialize first image
+document.getElementById('bgImage1').style.backgroundImage = `url('${backgroundImages[0]}')`;
+
+// Rotate background images
+function rotateBackgroundImage() {
+    currentImageIndex = (currentImageIndex + 1) % backgroundImages.length;
+    currentBgElement = currentBgElement === 1 ? 2 : 1;
+    
+    const nextElement = document.getElementById(`bgImage${currentBgElement}`);
+    const prevElement = document.getElementById(`bgImage${currentBgElement === 1 ? 2 : 1}`);
+    
+    nextElement.style.backgroundImage = `url('${backgroundImages[currentImageIndex]}')`;
+    nextElement.classList.add('active');
+    prevElement.classList.remove('active');
+}
+
+// Change image every 7 seconds
+setInterval(rotateBackgroundImage, 7000);

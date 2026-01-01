@@ -10,25 +10,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="background-slideshow">
+        <div class="background-image active" id="bgImage1"></div>
+        <div class="background-image" id="bgImage2"></div>
+    </div>
+
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p class="loading-text">Jesus loves you</p>
+        </div>
+    </div>
+
     <div class="titlebar">
         <h1 class="logo">that daily bread</h1>
     </div>
 
     <div class="container">
         <main>
-            <div class="verse-box">
-                <p class="verse-text" id="verseText">loading todays verse...</p>
-                <p class="verse-reference" id="verseReference"></p>
+            <div class="verse-box" id="verseBox">
+                <div class="daily-verse-view" id="dailyVerseView">
+                    <p class="verse-text" id="verseText">loading today's verse...</p>
+                    <p class="verse-reference" id="verseReference"></p>
+                </div>
+                
+                <div class="saved-verses-view" id="savedVersesView">
+                    <div class="saved-verses-header">
+                        <h2>saved verses</h2>
+                    </div>
+                    <div class="saved-verses-container" id="savedVersesContainer">
+                        <p class="no-verses">no saved verses yet. save a verse to see it here!</p>
+                    </div>
+                </div>
             </div>
 
             <div class="button-container">
-                <button class="save-button" id="saveButton">
+                <button class="save-button" id="saveButton" aria-label="Save verse">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                        <polyline points="7 3 7 8 15 8"></polyline>
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    <span>save</span>
                 </button>
 
                 <button class="share-button" id="shareButton" aria-label="Share verse">
@@ -41,6 +61,14 @@
                     </svg>
                 </button>
             </div>
+
+            <button class="saved-verses-button" id="savedVersesButton">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span>saved verses</span>
+            </button>
         </main>
     </div>
 

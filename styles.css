@@ -30,12 +30,50 @@
 
 body {
     font-family: 'Playfair Display', Georgia, serif;
-    background: linear-gradient(135deg, #f5f3f0 0%, #e8e3dc 50%, #d4cdc3 100%);
+    background: var(--background);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     padding: 0;
     color: var(--text-dark);
+    position: relative;
+}
+
+.background-slideshow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+}
+
+.background-image.active {
+    opacity: 0.3;
+}
+
+.background-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(245, 243, 240, 0.7) 0%, rgba(232, 227, 220, 0.7) 50%, rgba(212, 205, 195, 0.7) 100%);
 }
 
 .titlebar {
@@ -80,9 +118,16 @@ main {
     box-shadow: var(--shadow-xl);
     margin-bottom: 20px;
     min-height: 40vh;
+    max-height: 60vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.verse-box.showing-saved {
+    overflow-y: auto;
 }
 
 .verse-text {
@@ -113,15 +158,12 @@ main {
     background: var(--primary-color);
     color: var(--white);
     border: none;
-    padding: 18px 32px;
+    padding: 18px 20px;
     border-radius: var(--border-radius);
-    font-size: 1.1rem;
-    font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
     box-shadow: var(--shadow-md);
     font-family: 'Playfair Display', serif;
 }
@@ -155,6 +197,53 @@ main {
 .share-button:hover {
     background: var(--cream);
     box-shadow: var(--shadow-lg);
+}
+
+.saved-verses-button {
+    width: 100%;
+    background: var(--white);
+    color: var(--primary-color);
+    border: 2px solid var(--beige);
+    padding: 18px 32px;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-shadow: var(--shadow-md);
+    font-family: 'Playfair Display', serif;
+    margin-top: 15px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.saved-verses-button span {
+    transition: opacity 0.2s ease;
+}
+
+.saved-verses-button.showing-close span {
+    display: none;
+}
+
+.saved-verses-button.showing-close {
+    padding: 18px 20px;
+    gap: 0;
+}
+
+.saved-verses-button.showing-close .icon {
+    transform: rotate(0deg);
+}
+
+.saved-verses-button:hover {
+    background: var(--cream);
+    border-color: var(--tan);
+    box-shadow: var(--shadow-lg);
+}
+
+.saved-verses-button .icon {
+    color: var(--primary-color);
 }
 
 .icon {
@@ -194,6 +283,175 @@ footer {
     opacity: 1;
 }
 
+.saved-verses-view {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.saved-verses-view.active {
+    display: flex;
+    opacity: 1;
+}
+
+.saved-verses-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--cream);
+}
+
+.saved-verses-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    font-weight: 600;
+    margin: 0;
+}
+
+.close-saved-verses {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.close-saved-verses:hover {
+    background: var(--cream);
+    color: var(--text-dark);
+}
+
+.close-saved-verses svg {
+    width: 24px;
+    height: 24px;
+}
+
+.saved-verses-container {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.daily-verse-view {
+    transition: opacity 0.3s ease;
+}
+
+.daily-verse-view.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.no-verses {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 1.1rem;
+    padding: 40px 20px;
+}
+
+.saved-verse-item {
+    background: var(--cream);
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+}
+
+.saved-verse-item:last-child {
+    margin-bottom: 0;
+}
+
+.saved-verse-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+}
+
+.saved-verse-reference {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.saved-verse-date {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+}
+
+.delete-saved-verse {
+    background: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Playfair Display', serif;
+}
+
+.delete-saved-verse:hover {
+    background: var(--primary-hover);
+}
+
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(90, 74, 58, 0.2);
+    border-top: 4px solid var(--text-dark);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-family: 'Bropella', serif;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
 @media (max-width: 768px) {
     .titlebar {
         padding: 18px 25px;
@@ -222,12 +480,17 @@ footer {
     }
 
     .save-button {
-        padding: 16px 28px;
-        font-size: 1rem;
+        padding: 16px 18px;
     }
 
     .share-button {
         padding: 16px 18px;
+    }
+
+    .saved-verses-button {
+        padding: 16px 28px;
+        font-size: 1rem;
+        margin-top: 12px;
     }
 
     .icon {
@@ -274,13 +537,18 @@ footer {
     }
 
     .save-button {
-        padding: 14px 20px;
-        font-size: 0.95rem;
-        gap: 10px;
+        padding: 14px 16px;
     }
 
     .share-button {
         padding: 14px 16px;
+    }
+
+    .saved-verses-button {
+        padding: 14px 20px;
+        font-size: 0.95rem;
+        gap: 10px;
+        margin-top: 10px;
     }
 
     .icon {
