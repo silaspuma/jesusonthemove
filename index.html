@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>jesus on the move</title>
+    <title>Jesus on the move</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,7 +28,14 @@
     <!-- Intro overlay (mobile-first) -->
     <div class="intro-overlay" id="introOverlay">
         <div class="intro-shell">
-            <div class="intro-header">I found you!</div>
+            <div class="intro-header">
+                <span class="logo-text">
+                    <span class="logo-word">jesus</span>
+                    <span class="logo-word">on</span>
+                    <span class="logo-word logo-the"><span class="logo-t-script">t</span>he</span>
+                    <span class="logo-word">move</span>
+                </span>
+            </div>
             <div class="intro-mascot">
                 <img src="mascot.png" alt="mascot" loading="lazy">
             </div>
@@ -48,7 +58,7 @@
                 <div class="onboard-step">
                     <div class="onboard-circle"></div>
                     <div class="onboard-text">
-                        <div class="onboard-title">Step 1</div>
+                        <div class="onboard-title">step 1</div>
                         <div class="onboard-body">body text goes here</div>
                     </div>
                 </div>
@@ -58,7 +68,7 @@
                 <div class="onboard-step">
                     <div class="onboard-circle"></div>
                     <div class="onboard-text">
-                        <div class="onboard-title">Step 2</div>
+                        <div class="onboard-title">step 2</div>
                         <div class="onboard-body">body text goes here</div>
                     </div>
                 </div>
@@ -68,19 +78,43 @@
                 <div class="onboard-step">
                     <div class="onboard-circle"></div>
                     <div class="onboard-text">
-                        <div class="onboard-title">Step 3</div>
+                        <div class="onboard-title">step 3</div>
                         <div class="onboard-body">body text goes here</div>
                     </div>
                 </div>
             </div>
-            <button class="onboard-button" id="onboardDone">Got It</button>
+            <button class="onboard-button" id="onboardDone">enter zip code</button>
+            <div class="onboard-link" id="onboardSkip" role="button" tabindex="0">not now</div>
+        </div>
+    </div>
+
+    <!-- Zip capture overlay -->
+    <div class="zip-overlay hidden" id="zipOverlay">
+        <div class="zip-shell">
+            <div class="zip-header">enter zip code</div>
+            <div class="zip-input-row">
+                <input type="text" id="zipInput" class="zip-input" placeholder="zip code" inputmode="numeric" maxlength="10" autocomplete="postal-code">
+            </div>
+            <div class="zip-status" id="zipStatus"></div>
+            <div class="zip-map-preview" id="zipPreviewMap"></div>
+            <button class="zip-submit" id="zipSubmit">submit</button>
+            <div class="zip-note" id="zipNote"></div>
+        </div>
+    </div>
+
+    <!-- Full map overlay -->
+    <div class="zip-fullmap-overlay hidden" id="zipFullMapOverlay">
+        <div class="zip-fullmap-shell">
+            <div class="zip-fullmap-header">jesus on the move</div>
+            <div class="zip-fullmap" id="zipFullMap"></div>
+            <button class="zip-close" id="zipFullMapClose">back</button>
         </div>
     </div>
 
     <div class="titlebar">
         <h1 class="logo">
             <span class="logo-text">
-                <span class="logo-word">jesus</span>
+                <span class="logo-word">Jesus</span>
                 <span class="logo-word">on</span>
                 <span class="logo-word logo-the"><span class="logo-t-script">t</span>he</span>
                 <span class="logo-word">move</span>
@@ -139,10 +173,10 @@
     </footer>
 
     <div class="assist-fab" id="assistFab" aria-label="jesus assist">
-        <img src="jesus_assist.png" alt="jesus assist">
+        <img src="navicon.svg" alt="jesus assist">
     </div>
 
-    <div class="assist-bubble" id="assistBubble">Enter your text here!</div>
+    <div class="assist-bubble" id="assistBubble">enter your text here!</div>
 
     <div class="notification" id="notification">
         <span id="notificationText"></span>
@@ -152,6 +186,28 @@
         <span id="notificationText"></span>
     </div>
 
+    <script>
+        // TODO: replace with your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBdJfkKLh7hek5w3s5gBwO_nifTu4SMOH4",
+            authDomain: "thatdailybread.firebaseapp.com",
+            projectId: "thatdailybread",
+            storageBucket: "thatdailybread.firebasestorage.app",
+            messagingSenderId: "820139304366",
+            appId: "1:820139304366:web:b33b2d043ab869d045543f"
+        };
+
+        if (window.firebase) {
+            if (!firebase.apps.length) {
+                const app = firebase.initializeApp(firebaseConfig);
+                window.firebaseDb = firebase.firestore(app);
+            } else {
+                window.firebaseDb = firebase.firestore();
+            }
+        }
+    </script>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="script.js"></script>
 </body>
 </html>

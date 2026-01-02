@@ -15,6 +15,13 @@ let nextVerseRefreshTimer = null;
 let introDismissed = false;
 let onboardingSeen = false;
 let assistBubbleOpen = false;
+let zipPins = [];
+let zipPreviewMap = null;
+let zipPreviewMarker = null;
+let zipFullMap = null;
+let zipFullMarkers = [];
+let zipSubmitted = false;
+const ZIP_COLLECTION = 'zipPinsGlobal';
 
 // Get today's date string (YYYY-MM-DD) in UTC
 function getTodayString() {
@@ -291,6 +298,203 @@ function displayDate() {
     document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', options);
 }
 
+async function loadZipPins() {
+    try {
+        if (window.firebaseDb) {
+            const snap = await window.firebaseDb.collection(ZIP_COLLECTION).get();
+            zipPins = snap.docs.map(doc => ({ zip: doc.id, ...(doc.data() || {}) }));
+            localStorage.setItem('zipPinsCache', JSON.stringify(zipPins));
+        } else {
+            zipPins = [];
+        }
+    } catch (err) {
+        console.error('failed to load zip pins', err);
+        const cached = localStorage.getItem('zipPinsCache');
+        zipPins = cached ? JSON.parse(cached) : [];
+        showNotification('Pins unavailable (Firebase permissions?)');
+    }
+    zipSubmitted = Array.isArray(zipPins) && zipPins.length > 0;
+}
+
+async function saveZipPin(zip, location) {
+    if (!window.firebaseDb) {
+        console.warn('firebase not ready, skipping save');
+        return;
+    }
+    const ref = window.firebaseDb.collection(ZIP_COLLECTION).doc(zip);
+    await window.firebaseDb.runTransaction(async (txn) => {
+        const doc = await txn.get(ref);
+        const current = doc.exists ? doc.data() : {};
+        const count = (current.count || 0) + 1;
+        txn.set(ref, { zip, lat: location.lat, lng: location.lng, count }, { merge: true });
+    }).catch((err) => {
+        console.error('failed to save zip pin', err);
+        throw err;
+    });
+}
+
+async function geocodeZip(zip) {
+    const clean = zip.trim();
+    if (!clean) throw new Error('zip required');
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(clean)}&countrycodes=us&limit=1`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    if (!res.ok) throw new Error('could not lookup zip');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error('zip not found');
+    const { lat, lon } = data[0];
+    return { lat: parseFloat(lat), lng: parseFloat(lon) };
+}
+
+function ensurePreviewMap() {
+    const container = document.getElementById('zipPreviewMap');
+    if (zipPreviewMap || !container || !window.L) return;
+    zipPreviewMap = L.map(container, {
+        zoomControl: false,
+        attributionControl: false,
+    }).setView([37.0902, -95.7129], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+    }).addTo(zipPreviewMap);
+    setTimeout(() => {
+        if (zipPreviewMap) zipPreviewMap.invalidateSize();
+    }, 150);
+}
+
+function updatePreviewMap(location) {
+    ensurePreviewMap();
+    if (!zipPreviewMap || !location) return;
+    if (zipPreviewMarker) {
+        zipPreviewMarker.setLatLng(location);
+    } else {
+        zipPreviewMarker = L.marker(location).addTo(zipPreviewMap);
+    }
+    zipPreviewMap.setView(location, 10);
+}
+
+function ensureFullMap() {
+    const container = document.getElementById('zipFullMap');
+    if (zipFullMap || !container || !window.L) return;
+    zipFullMap = L.map(container, {
+        zoomControl: true,
+    }).setView([37.0902, -95.7129], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+    }).addTo(zipFullMap);
+    setTimeout(() => {
+        if (zipFullMap) zipFullMap.invalidateSize();
+    }, 150);
+}
+
+function refreshFullMapMarkers() {
+    if (!zipFullMap) return;
+    zipFullMarkers.forEach(m => zipFullMap.removeLayer(m));
+    zipFullMarkers = [];
+    zipPins.forEach(pin => {
+        const marker = L.marker([pin.lat, pin.lng]).addTo(zipFullMap);
+        marker.bindPopup(`${pin.zip} — ${pin.count || 1} here`);
+        zipFullMarkers.push(marker);
+    });
+    if (zipPins.length > 0) {
+        const group = L.featureGroup(zipFullMarkers);
+        zipFullMap.fitBounds(group.getBounds().pad(0.2));
+    } else {
+        zipFullMap.setView([37.0902, -95.7129], 3.5);
+    }
+}
+
+function showZipOverlay() {
+    const overlay = document.getElementById('zipOverlay');
+    const steps = document.getElementById('onboardOverlay');
+    if (steps) steps.classList.add('hidden');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        ensurePreviewMap();
+        setTimeout(() => {
+            if (zipPreviewMap) zipPreviewMap.invalidateSize();
+        }, 120);
+    }
+}
+
+function hideZipOverlay() {
+    const overlay = document.getElementById('zipOverlay');
+    if (overlay) overlay.classList.add('hidden');
+}
+
+function showFullMapOverlay() {
+    const overlay = document.getElementById('zipFullMapOverlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+        ensureFullMap();
+        refreshFullMapMarkers();
+        setTimeout(() => {
+            if (zipFullMap) zipFullMap.invalidateSize();
+        }, 120);
+    }
+}
+
+function hideFullMapOverlay() {
+    const overlay = document.getElementById('zipFullMapOverlay');
+    if (overlay) overlay.classList.add('hidden');
+}
+
+async function submitZip() {
+    const input = document.getElementById('zipInput');
+    const status = document.getElementById('zipStatus');
+    const note = document.getElementById('zipNote');
+    if (!input) return;
+    const zip = input.value.trim();
+    if (status) status.textContent = 'looking up...';
+    if (note) note.textContent = '';
+    try {
+        if (!window.firebaseDb) {
+            if (status) status.textContent = 'map not ready (firebase config missing)';
+            return;
+        }
+        const location = await geocodeZip(zip);
+        updatePreviewMap(location);
+        const existing = zipPins.find(p => p.zip === zip);
+        if (existing) {
+            existing.count = (existing.count || 1) + 1;
+            existing.lat = location.lat;
+            existing.lng = location.lng;
+        } else {
+            zipPins.push({ zip, lat: location.lat, lng: location.lng, count: 1 });
+        }
+        const peopleCount = existing ? existing.count : 1;
+        if (note) note.textContent = `${peopleCount} people in your area have found me!`;
+        if (status) status.textContent = 'added';
+        zipSubmitted = true;
+        await saveZipPin(zip, location);
+        await loadZipPins();
+        showFullMapOverlay();
+    } catch (err) {
+        console.error('zip submission failed', err);
+        if (status) status.textContent = err.message || 'something went wrong';
+    }
+}
+
+async function setupZipFlow() {
+    await loadZipPins();
+    const submitBtn = document.getElementById('zipSubmit');
+    const input = document.getElementById('zipInput');
+    const fullClose = document.getElementById('zipFullMapClose');
+    if (submitBtn) submitBtn.addEventListener('click', submitZip);
+    if (input) {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitZip();
+            }
+        });
+    }
+    if (fullClose) {
+        fullClose.addEventListener('click', () => {
+            hideFullMapOverlay();
+            hideZipOverlay();
+        });
+    }
+}
+
 function scheduleDailyVerseRefresh() {
     if (nextVerseRefreshTimer) {
         clearTimeout(nextVerseRefreshTimer);
@@ -311,8 +515,40 @@ function setupIntroOverlay() {
     const btn = document.getElementById('introContinue');
     const onboard = document.getElementById('onboardOverlay');
     const onboardBtn = document.getElementById('onboardDone');
+    const onboardSkip = document.getElementById('onboardSkip');
     const steps = document.getElementById('onboardSteps');
     if (!intro || !btn) return;
+
+    const dismissOnboarding = () => {
+        if (onboard) onboard.classList.add('hidden');
+        onboardingSeen = true;
+        localStorage.setItem('onboardingSeen', 'true');
+    };
+
+    const openZipFromOnboard = () => {
+        onboardingSeen = true;
+        localStorage.setItem('onboardingSeen', 'true');
+        showZipOverlay();
+    };
+
+    if (onboardBtn) onboardBtn.addEventListener('click', openZipFromOnboard);
+    if (onboardSkip) {
+        onboardSkip.addEventListener('click', dismissOnboarding);
+        onboardSkip.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dismissOnboarding();
+            }
+        });
+    }
+
+    // Temporarily skip intro/onboarding while keeping code intact
+    intro.classList.add('hidden');
+    if (onboard) onboard.classList.add('hidden');
+    introDismissed = true;
+    onboardingSeen = true;
+    localStorage.setItem('onboardingSeen', 'true');
+    return;
 
     onboardingSeen = localStorage.getItem('onboardingSeen') === 'true';
     if (onboardingSeen) {
@@ -337,30 +573,27 @@ function setupIntroOverlay() {
         }
     });
 
-    if (onboard && onboardBtn) {
-        onboardBtn.addEventListener('click', () => {
-            onboard.classList.add('hidden');
-            onboardingSeen = true;
-            localStorage.setItem('onboardingSeen', 'true');
-        });
-    }
 }
 
 function setupAssistBubble() {
     const fab = document.getElementById('assistFab');
     const bubble = document.getElementById('assistBubble');
-    if (!fab || !bubble) return;
+    const onboard = document.getElementById('onboardOverlay');
+    const steps = document.getElementById('onboardSteps');
+    if (!fab) return;
 
-    const toggle = () => {
-        assistBubbleOpen = !assistBubbleOpen;
-        if (assistBubbleOpen) {
-            bubble.classList.add('show');
-        } else {
-            bubble.classList.remove('show');
+    const openAssist = async () => {
+        assistBubbleOpen = false;
+        if (bubble) bubble.classList.remove('show');
+        await loadZipPins();
+        if (zipPins && zipPins.length > 0) {
+            showFullMapOverlay();
+            return;
         }
+        showZipOverlay();
     };
 
-    fab.addEventListener('click', toggle);
+    fab.addEventListener('click', openAssist);
 }
 
 // ---------- Streak helpers ----------
@@ -829,6 +1062,7 @@ async function shareSavedVerse(index) {
 displayVerse();
 displayDate();
 scheduleDailyVerseRefresh();
+setupZipFlow();
 setupIntroOverlay();
 setupAssistBubble();
 
