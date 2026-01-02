@@ -12,6 +12,7 @@ let streakData = {
 let hasMarkedToday = false;
 let firestoreApi = null;
 const STREAK_HISTORY_DAYS = 62; // keep enough days to render full months
+let nextVerseRefreshTimer = null;
 
 // Get today's date string (YYYY-MM-DD) in UTC
 function getTodayString() {
@@ -255,6 +256,21 @@ function displayDate() {
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', options);
+}
+
+function scheduleDailyVerseRefresh() {
+    if (nextVerseRefreshTimer) {
+        clearTimeout(nextVerseRefreshTimer);
+    }
+    const now = new Date();
+    const nextMidnightUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+    const delay = nextMidnightUTC - now.getTime();
+    nextVerseRefreshTimer = setTimeout(async () => {
+        localStorage.removeItem('dailyVerse');
+        await displayVerse();
+        displayDate();
+        scheduleDailyVerseRefresh();
+    }, Math.max(1000, delay));
 }
 
 // ---------- Streak helpers ----------
@@ -722,6 +738,7 @@ async function shareSavedVerse(index) {
 // Initialize
 displayVerse();
 displayDate();
+scheduleDailyVerseRefresh();
 
 // Hide loading screen after 1 second
 window.addEventListener('load', () => {
