@@ -3,32 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>that daily bread</title>
+    <title>jesus on the move</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Firebase -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyBdJfkKLh7hek5w3s5gBwO_nifTu4SMOH4",
-            authDomain: "thatdailybread.firebaseapp.com",
-            projectId: "thatdailybread",
-            storageBucket: "thatdailybread.firebasestorage.app",
-            messagingSenderId: "820139304366",
-            appId: "1:820139304366:web:b33b2d043ab869d045543f"
-        };
-        
-        window.firebaseApp = initializeApp(firebaseConfig);
-        window.firebaseAuth = getAuth(window.firebaseApp);
-        window.firebaseDb = getFirestore(window.firebaseApp);
-    </script>
     <div class="background-slideshow">
         <div class="background-image active" id="bgImage1"></div>
         <div class="background-image" id="bgImage2"></div>
@@ -41,36 +22,70 @@
         </div>
     </div>
 
-    <div class="titlebar">
-        <h1 class="logo">that daily bread</h1>
-        <button class="account-button" id="accountButton" aria-label="Account">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-        </button>
+    <!-- Intro overlay (mobile-first) -->
+    <div class="intro-overlay" id="introOverlay">
+        <div class="intro-shell">
+            <div class="intro-header">I found you!</div>
+            <div class="intro-mascot">
+                <img src="mascot.png" alt="mascot" loading="lazy">
+            </div>
+            <button class="intro-button" id="introContinue">Continue</button>
+        </div>
     </div>
 
-    <!-- Streak panel (shown when logged in) -->
-    <div class="streak-panel-backdrop hidden" id="streakPanelBackdrop"></div>
-    <div class="streak-panel hidden" id="streakPanel">
-        <button class="streak-close" id="streakPanelClose" aria-label="close streak panel">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-        </button>
-        <div class="streak-panel-hero">
-            <div class="streak-hero-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                    <path d="M12 2C12 2 7 7 7 12C7 15.866 9.686 19 12 19C14.314 19 17 15.866 17 12C17 9 14 7 14 7C14 7 14.5 10 12 12C10.5 10.5 11 7.5 12 6.5C13 5.5 12 2 12 2Z" fill="currentColor" stroke="currentColor"></path>
-                </svg>
+    <!-- Onboarding flow -->
+    <div class="onboard-overlay hidden" id="onboardOverlay">
+        <div class="onboard-shell">
+            <div class="onboard-logo">
+                <div class="logo-text">
+                    <span class="logo-word">jesus</span>
+                    <span class="logo-word">on</span>
+                    <span class="logo-word logo-the"><span class="logo-t-script">t</span>he</span>
+                    <span class="logo-word">move</span>
+                </div>
             </div>
-            <div class="streak-hero-count" id="streakPanelDays">0 days</div>
-            <div class="streak-hero-label">your streak</div>
+            <div class="onboard-steps" id="onboardSteps">
+                <div class="onboard-step">
+                    <div class="onboard-circle"></div>
+                    <div class="onboard-text">
+                        <div class="onboard-title">Step 1</div>
+                        <div class="onboard-body">body text goes here</div>
+                    </div>
+                </div>
+                <div class="onboard-connector">
+                    <span class="onboard-line"></span>
+                </div>
+                <div class="onboard-step">
+                    <div class="onboard-circle"></div>
+                    <div class="onboard-text">
+                        <div class="onboard-title">Step 2</div>
+                        <div class="onboard-body">body text goes here</div>
+                    </div>
+                </div>
+                <div class="onboard-connector">
+                    <span class="onboard-line"></span>
+                </div>
+                <div class="onboard-step">
+                    <div class="onboard-circle"></div>
+                    <div class="onboard-text">
+                        <div class="onboard-title">Step 3</div>
+                        <div class="onboard-body">body text goes here</div>
+                    </div>
+                </div>
+            </div>
+            <button class="onboard-button" id="onboardDone">Got It</button>
         </div>
-        <div class="streak-calendar" id="streakCalendar"></div>
-        <div class="streak-panel-footer">tap a day to reflect</div>
+    </div>
+
+    <div class="titlebar">
+        <h1 class="logo">
+            <span class="logo-text">
+                <span class="logo-word">jesus</span>
+                <span class="logo-word">on</span>
+                <span class="logo-word logo-the"><span class="logo-t-script">t</span>he</span>
+                <span class="logo-word">move</span>
+            </span>
+        </h1>
     </div>
 
     <div class="container">
@@ -123,52 +138,14 @@
         <p class="date" id="currentDate"></p>
     </footer>
 
-    <div class="notification" id="notification">
-        <span id="notificationText"></span>
+    <div class="assist-fab" id="assistFab" aria-label="jesus assist">
+        <img src="jesus_assist.png" alt="jesus assist">
     </div>
 
-    <div class="auth-modal" id="authModal">
-        <div class="auth-modal-content">
-            <button class="auth-modal-close" id="authModalClose" aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            
-            <div class="auth-form-container" id="authFormContainer">
-                <!-- Login Form -->
-                <div class="auth-form" id="loginForm">
-                    <h2>login</h2>
-                    <input type="email" id="loginEmail" placeholder="email" required>
-                    <input type="password" id="loginPassword" placeholder="password" required>
-                    <button class="auth-submit-btn" id="loginBtn">login</button>
-                    <p class="auth-switch">don't have an account? <button type="button" id="switchToSignup" class="link-btn">sign up</button></p>
-                </div>
-                
-                <!-- Signup Form -->
-                <div class="auth-form hidden" id="signupForm">
-                    <h2>create account</h2>
-                    <input type="email" id="signupEmail" placeholder="email" required>
-                    <input type="password" id="signupPassword" placeholder="password" required>
-                    <input type="password" id="signupConfirm" placeholder="confirm password" required>
-                    <button class="auth-submit-btn" id="signupBtn">sign up</button>
-                    <p class="auth-switch">already have an account? <button type="button" id="switchToLogin" class="link-btn">login</button></p>
-                </div>
-                
-                <!-- Account Profile -->
-                <div class="account-profile hidden" id="accountProfile">
-                    <div class="streak-section">
-                        <div class="streak-display">
-                            <div class="streak-number" id="streakNumber">0</div>
-                            <div class="streak-label">day streak</div>
-                        </div>
-                    </div>
-                    <div class="user-email" id="userEmail"></div>
-                    <button class="logout-btn" id="logoutBtn">logout</button>
-                </div>
-            </div>
-        </div>
+    <div class="assist-bubble" id="assistBubble">Enter your text here!</div>
+
+    <div class="notification" id="notification">
+        <span id="notificationText"></span>
     </div>
 
     <div class="notification" id="notification">

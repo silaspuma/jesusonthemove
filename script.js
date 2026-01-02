@@ -1,7 +1,6 @@
-// API.bible configuration
-const API_KEY = 'kswdJ0PhRlF7tnfs1Zghp';
-const API_BASE_URL = 'https://rest.api.bible/v1';
-const BIBLE_ID = 'de4e12af7f28f599-02'; // KJV Bible
+// bible-api.com configuration
+const BIBLE_API_BASE_URL = 'https://bible-api.com';
+const BIBLE_API_TRANSLATION = 'kjv';
 
 let currentVerse = {};
 let streakData = {
@@ -13,6 +12,9 @@ let hasMarkedToday = false;
 let firestoreApi = null;
 const STREAK_HISTORY_DAYS = 62; // keep enough days to render full months
 let nextVerseRefreshTimer = null;
+let introDismissed = false;
+let onboardingSeen = false;
+let assistBubbleOpen = false;
 
 // Get today's date string (YYYY-MM-DD) in UTC
 function getTodayString() {
@@ -165,21 +167,54 @@ function getTodaysVerseId() {
     return verseIds[index];
 }
 
-// Fetch verse of the day from API.bible
+const BOOK_MAP = {
+    'GEN': 'Genesis', 'EXO': 'Exodus', 'LEV': 'Leviticus', 'NUM': 'Numbers', 'DEU': 'Deuteronomy',
+    'JOS': 'Joshua', 'JDG': 'Judges', 'RUT': 'Ruth', '1SA': '1 Samuel', '2SA': '2 Samuel', '1KI': '1 Kings', '2KI': '2 Kings',
+    '1CH': '1 Chronicles', '2CH': '2 Chronicles', 'EZR': 'Ezra', 'NEH': 'Nehemiah', 'EST': 'Esther',
+    'JOB': 'Job', 'PSA': 'Psalm', 'PRO': 'Proverbs', 'ECC': 'Ecclesiastes', 'SNG': 'Song of Solomon',
+    'ISA': 'Isaiah', 'JER': 'Jeremiah', 'LAM': 'Lamentations', 'EZK': 'Ezekiel', 'DAN': 'Daniel', 'HOS': 'Hosea', 'JOL': 'Joel', 'AMO': 'Amos', 'OBA': 'Obadiah', 'JON': 'Jonah', 'MIC': 'Micah', 'NAM': 'Nahum', 'HAB': 'Habakkuk', 'ZEP': 'Zephaniah', 'HAG': 'Haggai', 'ZEC': 'Zechariah', 'MAL': 'Malachi',
+    'MAT': 'Matthew', 'MRK': 'Mark', 'LUK': 'Luke', 'JHN': 'John', 'ACT': 'Acts', 'ROM': 'Romans', '1CO': '1 Corinthians', '2CO': '2 Corinthians', 'GAL': 'Galatians', 'EPH': 'Ephesians', 'PHP': 'Philippians', 'COL': 'Colossians', '1TH': '1 Thessalonians', '2TH': '2 Thessalonians', '1TI': '1 Timothy', '2TI': '2 Timothy', 'TIT': 'Titus', 'PHM': 'Philemon', 'HEB': 'Hebrews', 'JAS': 'James', '1PE': '1 Peter', '2PE': '2 Peter', '1JN': '1 John', '2JN': '2 John', '3JN': '3 John', 'JUD': 'Jude', 'REV': 'Revelation'
+};
+
+function osisToReference(osis) {
+    // Example inputs: 'JHN.3.16', 'ROM.8.38-8.39', 'PRO.3.5-3.6'
+    if (!osis) return '';
+    const [start, end] = osis.split('-');
+    const startParts = start.split('.');
+    const bookCode = startParts[0];
+    const bookName = BOOK_MAP[bookCode] || bookCode;
+    const chapter = startParts[1];
+    const verse = startParts[2];
+
+    if (!end) {
+        return `${bookName} ${chapter}:${verse}`;
+    }
+
+    const endParts = end.split('.');
+    let endChapter = chapter;
+    let endVerse = endParts[endParts.length - 1];
+    if (endParts.length === 2) {
+        endChapter = endParts[0];
+    } else if (endParts.length === 3) {
+        endChapter = endParts[1];
+        endVerse = endParts[2];
+    }
+    if (endChapter === chapter) {
+        return `${bookName} ${chapter}:${verse}-${endVerse}`;
+    }
+    return `${bookName} ${chapter}:${verse}-${endChapter}:${endVerse}`;
+}
+
+// Fetch verse of the day from bible-api.com
 async function fetchVerseOfDay() {
     const verseId = getTodaysVerseId();
-    const url = `${API_BASE_URL}/bibles/${BIBLE_ID}/passages/${verseId}?content-type=text&include-notes=false&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false&include-verse-spans=false`;
-    
-    console.log('fetching verse from:', url);
-    console.log('using verse ID:', verseId);
-    console.log('api key:', API_KEY);
-    
-    const response = await fetch(url, {
-        headers: {
-            'api-key': API_KEY
-        }
-    });
+    const reference = osisToReference(verseId);
+    const url = `${BIBLE_API_BASE_URL}/${encodeURIComponent(reference)}?translation=${BIBLE_API_TRANSLATION}`;
 
+    console.log('fetching verse from:', url);
+    console.log('using verse reference:', reference);
+
+    const response = await fetch(url);
     console.log('response status:', response.status);
 
     if (!response.ok) {
@@ -190,16 +225,14 @@ async function fetchVerseOfDay() {
 
     const data = await response.json();
     console.log('api response:', data);
-    
-    const passage = data.data.content;
-    const reference = data.data.reference;
 
-    // Clean up the text
+    const passage = data.text || '';
+    const ref = data.reference || reference;
     const cleanText = passage.trim().replace(/\s+/g, ' ');
 
     return {
         text: cleanText,
-        reference: reference
+        reference: ref
     };
 }
 
@@ -271,6 +304,63 @@ function scheduleDailyVerseRefresh() {
         displayDate();
         scheduleDailyVerseRefresh();
     }, Math.max(1000, delay));
+}
+
+function setupIntroOverlay() {
+    const intro = document.getElementById('introOverlay');
+    const btn = document.getElementById('introContinue');
+    const onboard = document.getElementById('onboardOverlay');
+    const onboardBtn = document.getElementById('onboardDone');
+    const steps = document.getElementById('onboardSteps');
+    if (!intro || !btn) return;
+
+    onboardingSeen = localStorage.getItem('onboardingSeen') === 'true';
+    if (onboardingSeen) {
+        intro.classList.add('hidden');
+        if (onboard) onboard.classList.add('hidden');
+        introDismissed = true;
+        return;
+    }
+
+    intro.classList.remove('hidden');
+    introDismissed = false;
+
+    btn.addEventListener('click', () => {
+        intro.classList.add('hidden');
+        introDismissed = true;
+        if (onboard) {
+            onboard.classList.remove('hidden');
+            if (steps) {
+                // trigger timeline animation
+                requestAnimationFrame(() => steps.classList.add('animate'));
+            }
+        }
+    });
+
+    if (onboard && onboardBtn) {
+        onboardBtn.addEventListener('click', () => {
+            onboard.classList.add('hidden');
+            onboardingSeen = true;
+            localStorage.setItem('onboardingSeen', 'true');
+        });
+    }
+}
+
+function setupAssistBubble() {
+    const fab = document.getElementById('assistFab');
+    const bubble = document.getElementById('assistBubble');
+    if (!fab || !bubble) return;
+
+    const toggle = () => {
+        assistBubbleOpen = !assistBubbleOpen;
+        if (assistBubbleOpen) {
+            bubble.classList.add('show');
+        } else {
+            bubble.classList.remove('show');
+        }
+    };
+
+    fab.addEventListener('click', toggle);
 }
 
 // ---------- Streak helpers ----------
@@ -739,6 +829,8 @@ async function shareSavedVerse(index) {
 displayVerse();
 displayDate();
 scheduleDailyVerseRefresh();
+setupIntroOverlay();
+setupAssistBubble();
 
 // Hide loading screen after 1 second
 window.addEventListener('load', () => {
@@ -784,7 +876,7 @@ function rotateBackgroundImage() {
 // Change image every 7 seconds
 setInterval(rotateBackgroundImage, 7000);
 
-// Firebase Authentication
+// Firebase Authentication (disabled)
 let currentUser = null;
 
 // Setup Firebase auth state listener
