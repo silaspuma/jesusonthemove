@@ -1,3 +1,12 @@
+// Register service worker for PWA functionality
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {
+            // Service worker registration failed, app still works normally
+        });
+    });
+}
+
 // bible-api.com configuration
 const BIBLE_API_BASE_URL = 'https://bible-api.com';
 const BIBLE_API_TRANSLATION = 'web';
