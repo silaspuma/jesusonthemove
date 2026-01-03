@@ -1,6 +1,6 @@
 // bible-api.com configuration
 const BIBLE_API_BASE_URL = 'https://bible-api.com';
-const BIBLE_API_TRANSLATION = 'kjv';
+const BIBLE_API_TRANSLATION = 'web';
 
 let currentVerse = {};
 let streakData = {
@@ -333,6 +333,26 @@ async function saveZipPin(zip, location) {
     });
 }
 
+function createCrossIcon() {
+    const html = `
+        <div style="
+            width: 32px; height: 32px;
+            background: #b8a58ed9;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: white; font-weight: bold;
+            box-shadow: 0 2px 6px rgba(90, 74, 58, 0.3);
+        ">†</div>
+    `;
+    return L.divIcon({
+        html,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16],
+        className: ''
+    });
+}
+
 async function geocodeZip(zip) {
     const clean = zip.trim();
     if (!clean) throw new Error('zip required');
@@ -376,12 +396,19 @@ function ensureFullMap() {
     if (zipFullMap || !container || !window.L) return;
     zipFullMap = L.map(container, {
         zoomControl: true,
-    }).setView([37.0902, -95.7129], 4);
+    });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
     }).addTo(zipFullMap);
     setTimeout(() => {
-        if (zipFullMap) zipFullMap.invalidateSize();
+        if (zipFullMap) {
+            zipFullMap.invalidateSize();
+            const continentalUS = L.latLngBounds(
+                L.latLng(24, -125),
+                L.latLng(50, -66)
+            );
+            zipFullMap.fitBounds(continentalUS);
+        }
     }, 150);
 }
 
@@ -389,10 +416,20 @@ function refreshFullMapMarkers() {
     if (!zipFullMap) return;
     zipFullMarkers.forEach(m => zipFullMap.removeLayer(m));
     zipFullMarkers = [];
+    const icon = createCrossIcon();
     zipPins.forEach(pin => {
-        const marker = L.marker([pin.lat, pin.lng]).addTo(zipFullMap);
-        marker.bindPopup(`${pin.zip} — ${pin.count || 1} here`);
-        zipFullMarkers.push(marker);
+        const count = pin.count || 1;
+        const baseLat = pin.lat;
+        const baseLng = pin.lng;
+        const offset = 0.002;
+        for (let i = 0; i < count; i++) {
+            const angle = (i / count) * Math.PI * 2;
+            const lat = baseLat + Math.sin(angle) * offset * (i > 0 ? 1 : 0);
+            const lng = baseLng + Math.cos(angle) * offset * (i > 0 ? 1 : 0);
+            const marker = L.marker([lat, lng], { icon }).addTo(zipFullMap);
+            marker.bindPopup(`${pin.zip}`);
+            zipFullMarkers.push(marker);
+        }
     });
     if (zipPins.length > 0) {
         const group = L.featureGroup(zipFullMarkers);
@@ -464,6 +501,8 @@ async function submitZip() {
         if (note) note.textContent = `${peopleCount} people in your area have found me!`;
         if (status) status.textContent = 'added';
         zipSubmitted = true;
+        localStorage.setItem('userZipSubmitted', 'true');
+        localStorage.setItem('userZip', zip);
         await saveZipPin(zip, location);
         await loadZipPins();
         showFullMapOverlay();
@@ -483,6 +522,12 @@ async function setupZipFlow() {
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
+                submitZip();
+            }
+        });
+        input.addEventListener('input', (e) => {
+            const zip = e.target.value.trim();
+            if (zip.length >= 5) {
                 submitZip();
             }
         });
@@ -521,13 +566,10 @@ function setupIntroOverlay() {
 
     const dismissOnboarding = () => {
         if (onboard) onboard.classList.add('hidden');
-        onboardingSeen = true;
-        localStorage.setItem('onboardingSeen', 'true');
     };
 
     const openZipFromOnboard = () => {
-        onboardingSeen = true;
-        localStorage.setItem('onboardingSeen', 'true');
+        if (onboard) onboard.classList.add('hidden');
         showZipOverlay();
     };
 
@@ -585,12 +627,20 @@ function setupAssistBubble() {
     const openAssist = async () => {
         assistBubbleOpen = false;
         if (bubble) bubble.classList.remove('show');
-        await loadZipPins();
-        if (zipPins && zipPins.length > 0) {
-            showFullMapOverlay();
+        const userZipSubmitted = localStorage.getItem('userZipSubmitted') === 'true';
+        if (!userZipSubmitted) {
+            if (onboard) {
+                onboard.classList.remove('hidden');
+                if (steps) {
+                    steps.classList.remove('animate');
+                    void steps.offsetWidth;
+                    requestAnimationFrame(() => steps.classList.add('animate'));
+                }
+            }
             return;
         }
-        showZipOverlay();
+        await loadZipPins();
+        showFullMapOverlay();
     };
 
     fab.addEventListener('click', openAssist);
