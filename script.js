@@ -409,6 +409,22 @@ function updatePreviewMap(location) {
     zipPreviewMap.setView(location, 10);
 }
 
+function getContinentalUSBounds() {
+    if (!window.L) return null;
+    return L.latLngBounds(
+        L.latLng(24, -125),
+        L.latLng(50, -66)
+    );
+}
+
+function zoomFullMapToUS() {
+    if (!zipFullMap || !window.L) return;
+    const bounds = getContinentalUSBounds();
+    if (bounds) {
+        zipFullMap.fitBounds(bounds, { padding: [20, 20] });
+    }
+}
+
 function ensureFullMap() {
     const container = document.getElementById('zipFullMap');
     if (zipFullMap || !container || !window.L) return;
@@ -421,11 +437,7 @@ function ensureFullMap() {
     setTimeout(() => {
         if (zipFullMap) {
             zipFullMap.invalidateSize();
-            const continentalUS = L.latLngBounds(
-                L.latLng(24, -125),
-                L.latLng(50, -66)
-            );
-            zipFullMap.fitBounds(continentalUS);
+            zoomFullMapToUS();
         }
     }, 150);
 }
@@ -449,12 +461,7 @@ function refreshFullMapMarkers() {
             zipFullMarkers.push(marker);
         }
     });
-    if (zipPins.length > 0) {
-        const group = L.featureGroup(zipFullMarkers);
-        zipFullMap.fitBounds(group.getBounds().pad(0.2));
-    } else {
-        zipFullMap.setView([37.0902, -95.7129], 3.5);
-    }
+    zoomFullMapToUS();
 }
 
 function showZipOverlay() {
@@ -482,7 +489,10 @@ function showFullMapOverlay() {
         ensureFullMap();
         refreshFullMapMarkers();
         setTimeout(() => {
-            if (zipFullMap) zipFullMap.invalidateSize();
+            if (zipFullMap) {
+                zipFullMap.invalidateSize();
+                zoomFullMapToUS();
+            }
         }, 120);
     }
 }
@@ -534,8 +544,15 @@ async function setupZipFlow() {
     await loadZipPins();
     const submitBtn = document.getElementById('zipSubmit');
     const input = document.getElementById('zipInput');
+    const sendBtn = document.getElementById('zipSend');
+    const inputRow = document.querySelector('.zip-input-row');
     const fullClose = document.getElementById('zipFullMapClose');
+    if (sendBtn) sendBtn.disabled = true;
     if (submitBtn) submitBtn.addEventListener('click', submitZip);
+    if (sendBtn) sendBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        submitZip();
+    });
     if (input) {
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -545,6 +562,8 @@ async function setupZipFlow() {
         });
         input.addEventListener('input', (e) => {
             const zip = e.target.value.trim();
+            if (inputRow) inputRow.classList.toggle('send-visible', zip.length > 0);
+            if (sendBtn) sendBtn.disabled = zip.length === 0;
             if (zip.length >= 5) {
                 submitZip();
             }
@@ -580,6 +599,7 @@ function setupIntroOverlay() {
     const onboardBtn = document.getElementById('onboardDone');
     const onboardSkip = document.getElementById('onboardSkip');
     const steps = document.getElementById('onboardSteps');
+    const isQrVisit = window.location.search.includes('=qr');
     if (!intro || !btn) return;
 
     const dismissOnboarding = () => {
@@ -603,10 +623,13 @@ function setupIntroOverlay() {
     }
 
     onboardingSeen = localStorage.getItem('onboardingSeen') === 'true';
-    if (onboardingSeen) {
+
+    if (!isQrVisit) {
         intro.classList.add('hidden');
         if (onboard) onboard.classList.add('hidden');
         introDismissed = true;
+        onboardingSeen = true;
+        localStorage.setItem('onboardingSeen', 'true');
         return;
     }
 
@@ -627,6 +650,23 @@ function setupAssistBubble() {
     const onboard = document.getElementById('onboardOverlay');
     const steps = document.getElementById('onboardSteps');
     if (!fab) return;
+
+    const bubbleMessage = "track where i've been found!";
+    if (bubble) bubble.textContent = bubbleMessage;
+
+    const hintKey = 'assistBubbleHintShown';
+    const hintShown = localStorage.getItem(hintKey) === 'true';
+    const showHint = () => {
+        if (bubble) {
+            bubble.textContent = bubbleMessage;
+            bubble.classList.add('show');
+            setTimeout(() => bubble.classList.remove('show'), 4500);
+        }
+    };
+    if (!hintShown) {
+        setTimeout(showHint, 700);
+        localStorage.setItem(hintKey, 'true');
+    }
 
     const openAssist = async () => {
         assistBubbleOpen = false;

@@ -76,7 +76,7 @@
 }
 
 .intro-mascot img {
-    width: min(50vw, 180px);
+    width: min(46vw, 150px);
     height: auto;
     object-fit: contain;
     filter: none;
@@ -315,7 +315,7 @@
 .zip-input-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     background: rgba(255, 255, 255, 0.9);
     border-radius: 14px;
     padding: 12px 14px;
@@ -324,6 +324,8 @@
 
 .zip-input {
     width: 100%;
+    flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     background: transparent;
@@ -331,6 +333,43 @@
     color: var(--text-dark);
     font-family: 'Playfair Display', serif;
     letter-spacing: 0.04em;
+}
+
+.zip-send {
+    width: 52px;
+    height: 48px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #b8a58e, #d7c7af);
+    color: #1f1a15;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(6px) scale(0.96);
+    transition: opacity 0.18s ease, transform 0.18s ease, filter 0.2s ease;
+}
+
+.zip-send .icon {
+    width: 22px;
+    height: 22px;
+}
+
+.zip-send:hover {
+    filter: brightness(1.03);
+}
+
+.zip-send:active {
+    transform: translateX(6px) scale(0.94);
+}
+
+.zip-input-row.send-visible .zip-send {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0) scale(1);
 }
 
 .zip-input::placeholder {
