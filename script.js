@@ -609,13 +609,7 @@ function setupIntroOverlay() {
     btn.addEventListener('click', () => {
         intro.classList.add('hidden');
         introDismissed = true;
-        if (onboard) {
-            onboard.classList.remove('hidden');
-            if (steps) {
-                // trigger timeline animation
-                requestAnimationFrame(() => steps.classList.add('animate'));
-            }
-        }
+        localStorage.setItem('onboardingSeen', 'true');
     });
 
 }
