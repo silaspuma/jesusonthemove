@@ -595,14 +595,6 @@ function setupIntroOverlay() {
         });
     }
 
-    // Temporarily skip intro/onboarding while keeping code intact
-    intro.classList.add('hidden');
-    if (onboard) onboard.classList.add('hidden');
-    introDismissed = true;
-    onboardingSeen = true;
-    localStorage.setItem('onboardingSeen', 'true');
-    return;
-
     onboardingSeen = localStorage.getItem('onboardingSeen') === 'true';
     if (onboardingSeen) {
         intro.classList.add('hidden');
