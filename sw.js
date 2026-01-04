@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jesus-on-the-move-v1';
+const CACHE_NAME = 'jesus-on-the-move-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -64,7 +64,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache first for local assets
+  // Network first for HTML and JS to ensure updates are loaded
+  if (request.url.endsWith('.html') || request.url.endsWith('.js') || request.url.endsWith('/')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, clonedResponse);
+          });
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Cache first for CSS and other assets
   event.respondWith(
     caches.match(request).then((response) => {
       if (response) {
