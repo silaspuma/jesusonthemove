@@ -288,11 +288,18 @@ async function getTodaysVerse() {
     return verse;
 }
 
+// Add glow effect to holy words
+function addGlowToHolyWords(text) {
+    // Replace capitalized holy words with spans
+    return text.replace(/\b(God|Jesus|Him|His)\b/g, '<span class="holy-word">$1</span>');
+}
+
 // Display the verse
 async function displayVerse() {
     try {
         currentVerse = await getTodaysVerse();
-        document.getElementById('verseText').textContent = `"${currentVerse.text}"`;
+        const verseWithGlow = addGlowToHolyWords(currentVerse.text);
+        document.getElementById('verseText').innerHTML = `"${verseWithGlow}"`;
         document.getElementById('verseReference').textContent = currentVerse.reference;
         updateSaveButton();
     } catch (error) {
