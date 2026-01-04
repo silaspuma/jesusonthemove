@@ -921,7 +921,7 @@ async function shareVerse() {
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'that daily bread',
+                title: "Check out today's verse! | JOTM",
                 text: shareText,
                 url: window.location.href
             });
@@ -1097,7 +1097,7 @@ async function shareSavedVerse(index) {
     if (navigator.share) {
         try {
             await navigator.share({
-                title: 'that daily bread',
+                title: "Check out today's verse! | JOTM",
                 text: shareText,
                 url: window.location.href
             });
