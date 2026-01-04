@@ -1342,6 +1342,14 @@ async function incrementVisitorCount() {
     try {
         const counterRef = window.firebaseDb.collection('analytics').doc(VISITOR_COUNTER_DOC);
         
+        // First, get and display current count immediately
+        const currentDoc = await counterRef.get();
+        if (currentDoc.exists) {
+            visitorCount = currentDoc.data().count || 0;
+            displayVisitorCount();
+        }
+        
+        // Then increment
         await window.firebaseDb.runTransaction(async (transaction) => {
             const doc = await transaction.get(counterRef);
             
@@ -1382,8 +1390,12 @@ async function getVisitorCount() {
 
 function displayVisitorCount() {
     const countElement = document.getElementById('visitCount');
-    if (countElement && visitorCount > 0) {
-        countElement.textContent = visitorCount.toLocaleString();
+    if (countElement) {
+        if (visitorCount > 0) {
+            countElement.textContent = visitorCount.toLocaleString();
+        } else {
+            countElement.textContent = '0';
+        }
     }
 }
 
