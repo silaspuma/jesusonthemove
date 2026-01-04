@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200">
+  <!-- Define the font styles -->
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap');
+      .logo-text {
+        font-family: 'Bropella', 'Playfair Display', serif;
+        font-size: 64px;
+        font-weight: 700;
+        fill: #5a4a3a;
+        letter-spacing: 3px;
+      }
+      .cross {
+        font-family: 'Bropella', 'Playfair Display', serif;
+        font-size: 72px;
+        font-weight: 700;
+        fill: #5a4a3a;
+      }
+    </style>
+  </defs>
+
+  <!-- Background (optional, can be removed) -->
+  <rect width="600" height="200" fill="#f5f3f0" rx="20"/>
+
+  <!-- Text: "Jesus on " -->
+  <text x="50" y="120" class="logo-text">Jesus on </text>
+
+  <!-- Cross symbol (†) for the "t" -->
+  <text x="320" y="125" class="cross">†</text>
+
+  <!-- Text: "he move" -->
+  <text x="355" y="120" class="logo-text">he move</text>
+</svg>
