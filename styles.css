@@ -27,7 +27,7 @@
 
 .cross-icon {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 0.5;
+    font-size: 0.9em;
 }
 
 /* Intro overlay (iOS-inspired) */
@@ -47,7 +47,7 @@
 .intro-shell {
     width: min(430px, 100vw);
     height: min(820px, 100vh);
-    padding: 60px 24px 50px;
+    padding: 50px 20px 40px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -87,7 +87,11 @@
     color: white;
     border: none;
     border-radius: 14px;
-    padding: 16px;
+    padding: 18px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.05rem;
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -1382,16 +1386,19 @@ footer {
 
     .save-button {
         padding: 16px 18px;
+        min-height: 44px;
     }
 
     .share-button {
         padding: 16px 18px;
+        min-height: 44px;
     }
 
     .saved-verses-button {
         padding: 16px 28px;
         font-size: 1rem;
         margin-top: 12px;
+        min-height: 44px;
     }
 
     .icon {
@@ -1401,6 +1408,13 @@ footer {
 
     footer {
         padding: 25px 20px;
+    }
+    
+    .assist-fab {
+        bottom: 25px;
+        right: 25px;
+        width: 56px;
+        height: 56px;
     }
 }
 
@@ -1424,13 +1438,13 @@ footer {
     }
 
     .verse-box {
-        padding: 35px 22px;
+        padding: 30px 20px;
         margin-bottom: 15px;
         min-height: auto;
     }
 
     .verse-text {
-        font-size: 1.45rem;
+        font-size: 1.4rem;
         line-height: 1.65;
         margin-bottom: 20px;
     }
@@ -1445,10 +1459,12 @@ footer {
 
     .save-button {
         padding: 14px 16px;
+        min-height: 48px;
     }
 
     .share-button {
         padding: 14px 16px;
+        min-height: 48px;
     }
 
     .saved-verses-button {
@@ -1456,6 +1472,7 @@ footer {
         font-size: 0.95rem;
         gap: 10px;
         margin-top: 10px;
+        min-height: 48px;
     }
 
     .icon {
@@ -1476,5 +1493,36 @@ footer {
         padding: 12px 20px;
         font-size: 0.9rem;
         max-width: 90%;
+    }
+    
+    .assist-fab {
+        bottom: 20px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+    }
+    
+    .intro-header {
+        font-size: 1.7rem;
+    }
+    
+    .onboard-logo {
+        font-size: 1.5rem;
+    }
+    
+    .zip-header {
+        font-size: 1.3rem;
+    }
+    
+    .zip-input {
+        font-size: 1.1rem;
+        padding: 14px;
+        min-height: 48px;
+    }
+    
+    .zip-submit {
+        min-height: 48px;
+        font-size: 1rem;
+        padding: 14px;
     }
 }
