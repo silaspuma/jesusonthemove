@@ -31,6 +31,8 @@ let zipFullMap = null;
 let zipFullMarkers = [];
 let zipSubmitted = false;
 const ZIP_COLLECTION = 'zipPinsGlobal';
+const VISITOR_COUNTER_DOC = 'siteVisitors';
+let visitorCount = 0;
 
 // Get today's date string (YYYY-MM-DD) in UTC
 function getTodayString() {
@@ -1329,6 +1331,62 @@ if (document.getElementById('authModal')) {
     });
 }
 
+// Visitor counter functions
+async function incrementVisitorCount() {
+    if (!window.firebaseDb) {
+        console.log('Firebase not available for visitor counter, retrying...');
+        setTimeout(incrementVisitorCount, 500);
+        return;
+    }
+
+    try {
+        const counterRef = window.firebaseDb.collection('analytics').doc(VISITOR_COUNTER_DOC);
+        
+        await window.firebaseDb.runTransaction(async (transaction) => {
+            const doc = await transaction.get(counterRef);
+            
+            if (!doc.exists) {
+                transaction.set(counterRef, { count: 1 });
+                visitorCount = 1;
+            } else {
+                const newCount = (doc.data().count || 0) + 1;
+                transaction.update(counterRef, { count: newCount });
+                visitorCount = newCount;
+            }
+        });
+        
+        console.log('Visitor count updated:', visitorCount);
+        displayVisitorCount();
+    } catch (error) {
+        console.log('Visitor counter error:', error);
+        // Try to get current count even if increment failed
+        getVisitorCount();
+    }
+}
+
+async function getVisitorCount() {
+    if (!window.firebaseDb) return;
+    
+    try {
+        const counterRef = window.firebaseDb.collection('analytics').doc(VISITOR_COUNTER_DOC);
+        const doc = await counterRef.get();
+        
+        if (doc.exists) {
+            visitorCount = doc.data().count || 0;
+            displayVisitorCount();
+        }
+    } catch (error) {
+        console.log('Failed to get visitor count:', error);
+    }
+}
+
+function displayVisitorCount() {
+    const countElement = document.getElementById('visitCount');
+    if (countElement && visitorCount > 0) {
+        countElement.textContent = visitorCount.toLocaleString();
+    }
+}
+
 // Streak panel events
 if (document.getElementById('streakPanelClose')) {
     document.getElementById('streakPanelClose').addEventListener('click', closeStreakPanel);
@@ -1341,6 +1399,11 @@ if (document.getElementById('streakPanelBackdrop')) {
 setTimeout(() => {
     setupFirebase();
 }, 500);
+
+// Increment visitor counter after a delay to ensure Firebase is ready
+setTimeout(() => {
+    incrementVisitorCount();
+}, 1000);
 
 // Hide loading screen after 1 second
 window.addEventListener('load', () => {
