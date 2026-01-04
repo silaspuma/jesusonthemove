@@ -75,10 +75,20 @@
 }
 
 .intro-mascot img {
-    width: min(70vw, 260px);
+    width: min(50vw, 180px);
     height: auto;
     object-fit: contain;
     filter: none;
+    animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.08);
+    }
 }
 
 .intro-button {
