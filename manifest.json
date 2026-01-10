@@ -1,8 +1,9 @@
 {
-  "name": "Jesus on the move",
-  "short_name": "Daily Bread",
-  "description": "Daily Bible verses to inspire and strengthen your faith. Join a community sharing scripture through the United States.",
-  "start_url": "/",
+  "name": "Jesus on the move - Daily Bible Verses",
+  "short_name": "Jesus OTM",
+  "description": "Daily Bible verses to inspire and strengthen your faith. Discover today's verse, save your favorites, and see where Jesus has been found across America. Free inspirational scripture delivered daily.",
+  "categories": ["lifestyle", "education", "religion"],
+  "start_url": "/?utm_source=pwa",
   "display": "standalone",
   "background_color": "#f5f3f0",
   "theme_color": "#b8a58e",
