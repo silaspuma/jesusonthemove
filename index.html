@@ -32,7 +32,23 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
+    <link rel="dns-prefetch" href="//tile.openstreetmap.org">
+    <link rel="dns-prefetch" href="//unpkg.com">
+    <link rel="canonical" href="https://jesusotm.com/">
+
+    <meta property="og:title" content="Jesus on the move">
+    <meta property="og:description" content="Daily Bible verses and a live map showing where Jesus has been found across the U.S.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jesusotm.com/">
+    <meta property="og:image" content="https://jesusotm.com/apple-touch-icon.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Jesus on the move">
+    <meta name="twitter:description" content="Daily Bible verses and a live map showing where Jesus has been found across the U.S.">
+    <meta name="twitter:image" content="https://jesusotm.com/apple-touch-icon.png">
 </head>
 <body>
     <div class="background-slideshow">
@@ -48,7 +64,7 @@
     </div>
 
     <!-- Intro overlay (mobile-first) -->
-    <div class="intro-overlay" id="introOverlay">
+    <div class="intro-overlay" id="introOverlay" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="intro-shell">
             <div class="intro-header">
                 <span class="logo-text">You found me!</span>
@@ -56,12 +72,12 @@
             <div class="intro-mascot">
                 <img src="mascot.png" alt="mascot" loading="lazy">
             </div>
-            <button class="intro-button" id="introContinue">continue</button>
+            <button class="intro-button" id="introContinue" type="button">continue</button>
         </div>
     </div>
 
     <!-- Onboarding flow -->
-    <div class="onboard-overlay hidden" id="onboardOverlay">
+    <div class="onboard-overlay hidden" id="onboardOverlay" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="onboard-shell">
             <div class="onboard-logo">
                 <span class="logo-text">Jesus on <span class="cross-icon">†</span>he move</span>
@@ -95,18 +111,18 @@
                     </div>
                 </div>
             </div>
-            <button class="onboard-button" id="onboardDone">enter zip code</button>
+            <button class="onboard-button" id="onboardDone" type="button">enter zip code</button>
             <div class="onboard-link" id="onboardSkip" role="button" tabindex="0">not now</div>
         </div>
     </div>
 
     <!-- Zip capture overlay -->
-    <div class="zip-overlay hidden" id="zipOverlay">
+    <div class="zip-overlay hidden" id="zipOverlay" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="zip-shell">
             <div class="zip-header">enter zip code</div>
             <div class="zip-input-row">
-                <input type="text" id="zipInput" class="zip-input" placeholder="zip code" inputmode="numeric" maxlength="10" autocomplete="postal-code">
-                <button class="zip-send" id="zipSend" aria-label="submit zip">
+                <input type="text" id="zipInput" class="zip-input" placeholder="zip code" inputmode="numeric" maxlength="5" pattern="\d{5}" autocomplete="postal-code" aria-label="zip code" aria-describedby="zipStatus zipNote">
+                <button class="zip-send" id="zipSend" aria-label="submit zip" type="button">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -115,19 +131,19 @@
             </div>
             <div class="zip-status" id="zipStatus"></div>
             <div class="zip-map-preview" id="zipPreviewMap"></div>
-            <button class="zip-submit" id="zipSubmit">submit</button>
+            <button class="zip-submit" id="zipSubmit" type="button">submit</button>
             <div class="zip-note" id="zipNote"></div>
         </div>
     </div>
 
     <!-- Full map overlay -->
-    <div class="zip-fullmap-overlay hidden" id="zipFullMapOverlay">
+    <div class="zip-fullmap-overlay hidden" id="zipFullMapOverlay" role="dialog" aria-modal="true" aria-hidden="true">
             <div class="zip-fullmap-shell">
             <div class="zip-fullmap-header">
                 <span class="logo-text">Jesus on <span class="cross-icon">†</span>he move</span>
             </div>
             <div class="zip-fullmap" id="zipFullMap"></div>
-            <button class="zip-close" id="zipFullMapClose">back</button>
+            <button class="zip-close" id="zipFullMapClose" type="button">back</button>
         </div>
     </div>
 
@@ -154,13 +170,13 @@
             </div>
 
             <div class="button-container">
-                <button class="save-button" id="saveButton" aria-label="Save verse">
+                <button class="save-button" id="saveButton" aria-label="Save verse" type="button">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                     </svg>
                 </button>
 
-                <button class="share-button" id="shareButton" aria-label="Share verse">
+                <button class="share-button" id="shareButton" aria-label="Share verse" type="button">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="18" cy="5" r="3"></circle>
                         <circle cx="6" cy="12" r="3"></circle>
@@ -171,7 +187,7 @@
                 </button>
             </div>
 
-            <button class="saved-verses-button" id="savedVersesButton">
+            <button class="saved-verses-button" id="savedVersesButton" type="button">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -184,7 +200,7 @@
     <footer>
         <div class="footer-content">
             <p class="date" id="currentDate"></p>
-            <p class="visit-counter" id="visitCounter">visits: <span id="visitCount">...</span></p>
+            <p class="visit-counter" id="visitCounter" aria-live="polite">visits: <span id="visitCount">...</span></p>
         </div>
     </footer>
 
@@ -192,15 +208,17 @@
         <img src="navicon.svg" alt="jesus assist">
     </div>
 
-    <div class="assist-bubble" id="assistBubble">track where i've been found!</div>
+    <div class="assist-bubble" id="assistBubble" role="status" aria-live="polite">Track where I've been found!</div>
 
-    <div class="notification" id="notification">
+    <div class="notification" id="notification" role="status" aria-live="polite">
         <span id="notificationText"></span>
     </div>
 
-    <div class="notification" id="notification">
-        <span id="notificationText"></span>
-    </div>
+    <noscript>
+        <div style="padding:12px; text-align:center;">
+            This site works best with JavaScript enabled.
+        </div>
+    </noscript>
 
     <script>
         // TODO: replace with your Firebase config

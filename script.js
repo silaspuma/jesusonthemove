@@ -291,7 +291,7 @@ async function getTodaysVerse() {
 // Add glow effect to holy words
 function addGlowToHolyWords(text) {
     // Replace capitalized holy words with spans
-    return text.replace(/\b(God|Jesus|Him|His)\b/g, '<span class="holy-word">$1</span>');
+    return text.replace(/\b(God|Jesus|Him|His|Father|Son)\b/g, '<span class="holy-word">$1</span>');
 }
 
 // Display the verse
@@ -470,22 +470,29 @@ function showZipOverlay() {
     if (steps) steps.classList.add('hidden');
     if (overlay) {
         overlay.classList.remove('hidden');
+        overlay.setAttribute('aria-hidden', 'false');
         ensurePreviewMap();
         setTimeout(() => {
             if (zipPreviewMap) zipPreviewMap.invalidateSize();
         }, 120);
+        const input = document.getElementById('zipInput');
+        if (input) input.focus();
     }
 }
 
 function hideZipOverlay() {
     const overlay = document.getElementById('zipOverlay');
-    if (overlay) overlay.classList.add('hidden');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
 }
 
 function showFullMapOverlay() {
     const overlay = document.getElementById('zipFullMapOverlay');
     if (overlay) {
         overlay.classList.remove('hidden');
+        overlay.setAttribute('aria-hidden', 'false');
         ensureFullMap();
         refreshFullMapMarkers();
         setTimeout(() => {
@@ -494,12 +501,20 @@ function showFullMapOverlay() {
                 zoomFullMapToUS();
             }
         }, 120);
+        const closeBtn = document.getElementById('zipFullMapClose');
+        if (closeBtn) closeBtn.focus();
+        if (typeof gtag === 'function') {
+            gtag('event', 'map_open');
+        }
     }
 }
 
 function hideFullMapOverlay() {
     const overlay = document.getElementById('zipFullMapOverlay');
-    if (overlay) overlay.classList.add('hidden');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
 }
 
 async function submitZip() {
@@ -508,6 +523,10 @@ async function submitZip() {
     const note = document.getElementById('zipNote');
     if (!input) return;
     const zip = input.value.trim();
+    if (!/^\d{5}$/.test(zip)) {
+        if (status) status.textContent = 'please enter a 5-digit zip';
+        return;
+    }
     if (status) status.textContent = 'looking up...';
     if (note) note.textContent = '';
     try {
@@ -534,6 +553,9 @@ async function submitZip() {
         await saveZipPin(zip, location);
         await loadZipPins();
         showFullMapOverlay();
+        if (typeof gtag === 'function') {
+            gtag('event', 'zip_submit', { zip });
+        }
     } catch (err) {
         console.error('zip submission failed', err);
         if (status) status.textContent = err.message || 'something went wrong';
@@ -563,8 +585,8 @@ async function setupZipFlow() {
         input.addEventListener('input', (e) => {
             const zip = e.target.value.trim();
             if (inputRow) inputRow.classList.toggle('send-visible', zip.length > 0);
-            if (sendBtn) sendBtn.disabled = zip.length === 0;
-            if (zip.length >= 5) {
+            if (sendBtn) sendBtn.disabled = !/^\d{5}$/.test(zip);
+            if (/^\d{5}$/.test(zip)) {
                 submitZip();
             }
         });
@@ -603,11 +625,17 @@ function setupIntroOverlay() {
     if (!intro || !btn) return;
 
     const dismissOnboarding = () => {
-        if (onboard) onboard.classList.add('hidden');
+        if (onboard) {
+            onboard.classList.add('hidden');
+            onboard.setAttribute('aria-hidden', 'true');
+        }
     };
 
     const openZipFromOnboard = () => {
-        if (onboard) onboard.classList.add('hidden');
+        if (onboard) {
+            onboard.classList.add('hidden');
+            onboard.setAttribute('aria-hidden', 'true');
+        }
         showZipOverlay();
     };
 
@@ -626,7 +654,11 @@ function setupIntroOverlay() {
 
     if (!isQrVisit) {
         intro.classList.add('hidden');
-        if (onboard) onboard.classList.add('hidden');
+        intro.setAttribute('aria-hidden', 'true');
+        if (onboard) {
+            onboard.classList.add('hidden');
+            onboard.setAttribute('aria-hidden', 'true');
+        }
         introDismissed = true;
         onboardingSeen = true;
         localStorage.setItem('onboardingSeen', 'true');
@@ -634,10 +666,12 @@ function setupIntroOverlay() {
     }
 
     intro.classList.remove('hidden');
+    intro.setAttribute('aria-hidden', 'false');
     introDismissed = false;
 
     btn.addEventListener('click', () => {
         intro.classList.add('hidden');
+        intro.setAttribute('aria-hidden', 'true');
         introDismissed = true;
         localStorage.setItem('onboardingSeen', 'true');
     });
@@ -675,6 +709,7 @@ function setupAssistBubble() {
         if (!userZipSubmitted) {
             if (onboard) {
                 onboard.classList.remove('hidden');
+                onboard.setAttribute('aria-hidden', 'false');
                 if (steps) {
                     steps.classList.remove('animate');
                     void steps.offsetWidth;
@@ -908,6 +943,33 @@ function showNotification(message) {
     }, 3000);
 }
 
+// Initialize saved verses on page load
+function initSavedVerses() {
+    const stored = localStorage.getItem('savedVerses');
+    if (!stored) {
+        localStorage.setItem('savedVerses', JSON.stringify([]));
+        return;
+    }
+    try {
+        const parsed = JSON.parse(stored);
+        if (!Array.isArray(parsed)) {
+            console.warn('Corrupted savedVerses data, resetting');
+            localStorage.setItem('savedVerses', JSON.stringify([]));
+            return;
+        }
+        // Validate each verse has required fields
+        const valid = parsed.every(v => v.text && v.reference && v.savedDate);
+        if (!valid) {
+            console.warn('Invalid verse entries detected, filtering');
+            const filtered = parsed.filter(v => v.text && v.reference && v.savedDate);
+            localStorage.setItem('savedVerses', JSON.stringify(filtered));
+        }
+    } catch (err) {
+        console.error('Failed to parse savedVerses:', err);
+        localStorage.setItem('savedVerses', JSON.stringify([]));
+    }
+}
+
 // Check if verse is saved
 function isVerseSaved() {
     const savedVerses = JSON.parse(localStorage.getItem('savedVerses') || '[]');
@@ -943,12 +1005,24 @@ function saveVerse() {
             savedDate: new Date().toISOString()
         });
         localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
+        // Double-write safeguard: verify it was saved
+        const verify = localStorage.getItem('savedVerses');
+        if (!verify) {
+            console.warn('Failed to persist savedVerses, attempting again');
+            localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
+        }
         showNotification('verse saved');
         updateSaveButton();
     } else {
         // Remove from saved
         const filtered = savedVerses.filter(v => v.reference !== currentVerse.reference);
         localStorage.setItem('savedVerses', JSON.stringify(filtered));
+        // Double-write safeguard: verify it was saved
+        const verify = localStorage.getItem('savedVerses');
+        if (!verify) {
+            console.warn('Failed to persist unsaved verse, attempting again');
+            localStorage.setItem('savedVerses', JSON.stringify(filtered));
+        }
         showNotification('verse unsaved');
         updateSaveButton();
     }
@@ -1117,6 +1191,12 @@ function deleteSavedVerse(index) {
     const deletedVerse = savedVerses[index];
     savedVerses.splice(index, 1);
     localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
+    // Double-write safeguard: verify it was saved
+    const verify = localStorage.getItem('savedVerses');
+    if (!verify) {
+        console.warn('Failed to persist verse deletion, attempting again');
+        localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
+    }
     
     // Update save button if current verse was deleted
     if (deletedVerse.reference === currentVerse.reference) {
@@ -1153,6 +1233,7 @@ async function shareSavedVerse(index) {
 }
 
 // Initialize
+initSavedVerses();
 displayVerse();
 displayDate();
 scheduleDailyVerseRefresh();
