@@ -48,7 +48,7 @@ const verseIds = [
     // John
     'JHN.1.1', 'JHN.1.12', 'JHN.3.16', 'JHN.3.17', 'JHN.4.24', 'JHN.6.35', 'JHN.8.12', 'JHN.8.32', 'JHN.10.10', 'JHN.10.11', 'JHN.11.25', 'JHN.13.34', 'JHN.14.1', 'JHN.14.6', 'JHN.14.27', 'JHN.15.5', 'JHN.15.13', 'JHN.16.33',
     // Romans
-    'ROM.1.16', 'ROM.3.23', 'ROM.5.1', 'ROM.5.8', 'ROM.6.9', 'ROM.6.23', 'ROM.8.1', 'ROM.8.28', 'ROM.8.31', 'ROM.8.37', 'ROM.8.38-8.39', 'ROM.10.9', 'ROM.10.13', 'ROM.12.1', 'ROM.12.2', 'ROM.12.12', 'ROM.15.13',
+    'ROM.1.16', 'ROM.3.23', 'ROM.5.1', 'ROM.5.8', 'ROM.6.9', 'ROM.6.23', 'ROM.8.1', 'ROM.8.28', 'ROM.8.31', 'ROM.8.37', 'ROM.8.38-8.39', 'ROM.10.9', 'ROM.10.13', 'ROM.12.1', 'ROM.12.2', 'ROM.15.13',
     // Psalms
     'PSA.1.1', 'PSA.1.6', 'PSA.16.11', 'PSA.19.14', 'PSA.23.1', 'PSA.23.4', 'PSA.27.1', 'PSA.27.14', 'PSA.28.7', 'PSA.30.5', 'PSA.32.1', 'PSA.34.8', 'PSA.34.18', 'PSA.37.4', 'PSA.37.5', 'PSA.40.1', 'PSA.42.1', 'PSA.46.1', 'PSA.46.10', 'PSA.51.10', 'PSA.55.22', 'PSA.56.3', 'PSA.62.8', 'PSA.86.5', 'PSA.90.12', 'PSA.91.1', 'PSA.91.11', 'PSA.95.1', 'PSA.100.4', 'PSA.103.2', 'PSA.107.1', 'PSA.118.24', 'PSA.119.9', 'PSA.119.11', 'PSA.119.105', 'PSA.121.1', 'PSA.127.1', 'PSA.133.1', 'PSA.139.14', 'PSA.145.18', 'PSA.147.3', 'PSA.150.6',
     // Matthew
@@ -288,18 +288,28 @@ async function getTodaysVerse() {
     return verse;
 }
 
-// Add glow effect to holy words
+// Escape HTML entities safely
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Format holy words (bold) while keeping content safe
 function addGlowToHolyWords(text) {
-    // Replace capitalized holy words with spans
-    return text.replace(/\b(God|Jesus|Him|His|Father|Son)\b/g, '<span class="holy-word">$1</span>');
+    const safe = escapeHtml(text);
+    return safe.replace(/\b(God|Jesus|Him|His|Father|Son)\b/g, '<span class="holy-word">$1</span>');
 }
 
 // Display the verse
 async function displayVerse() {
     try {
         currentVerse = await getTodaysVerse();
-        const verseWithGlow = addGlowToHolyWords(currentVerse.text);
-        document.getElementById('verseText').innerHTML = `"${verseWithGlow}"`;
+        const verseFormatted = addGlowToHolyWords(currentVerse.text);
+        document.getElementById('verseText').innerHTML = `"${verseFormatted}"`;
         document.getElementById('verseReference').textContent = currentVerse.reference;
         updateSaveButton();
     } catch (error) {
