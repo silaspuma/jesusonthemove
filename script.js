@@ -1006,32 +1006,59 @@ function updateSaveButton() {
 
 // Save verse functionality
 function saveVerse() {
-    const savedVerses = JSON.parse(localStorage.getItem('savedVerses') || '[]');
-    
+    let savedVerses;
+    try {
+        savedVerses = JSON.parse(localStorage.getItem('savedVerses') || '[]');
+    } catch (e) {
+        console.error('Corrupted savedVerses in localStorage, resetting:', e);
+        savedVerses = [];
+        localStorage.setItem('savedVerses', JSON.stringify([]));
+    }
+
     if (!isVerseSaved()) {
         savedVerses.push({
             text: currentVerse.text,
             reference: currentVerse.reference,
             savedDate: new Date().toISOString()
         });
-        localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
-        // Double-write safeguard: verify it was saved
-        const verify = localStorage.getItem('savedVerses');
-        if (!verify) {
-            console.warn('Failed to persist savedVerses, attempting again');
+        try {
             localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
+            const verify = localStorage.getItem('savedVerses');
+            if (!verify) {
+                console.warn('Failed to persist savedVerses, attempting again');
+                localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
+            }
+            // Extra: check parse after write
+            const testParse = JSON.parse(localStorage.getItem('savedVerses'));
+            if (!Array.isArray(testParse)) {
+                throw new Error('savedVerses is not an array after save');
+            }
+        } catch (err) {
+            console.error('Error saving verse to localStorage:', err);
+            showNotification('error saving verse');
+            return;
         }
         showNotification('verse saved');
         updateSaveButton();
     } else {
         // Remove from saved
         const filtered = savedVerses.filter(v => v.reference !== currentVerse.reference);
-        localStorage.setItem('savedVerses', JSON.stringify(filtered));
-        // Double-write safeguard: verify it was saved
-        const verify = localStorage.getItem('savedVerses');
-        if (!verify) {
-            console.warn('Failed to persist unsaved verse, attempting again');
+        try {
             localStorage.setItem('savedVerses', JSON.stringify(filtered));
+            const verify = localStorage.getItem('savedVerses');
+            if (!verify) {
+                console.warn('Failed to persist unsaved verse, attempting again');
+                localStorage.setItem('savedVerses', JSON.stringify(filtered));
+            }
+            // Extra: check parse after write
+            const testParse = JSON.parse(localStorage.getItem('savedVerses'));
+            if (!Array.isArray(testParse)) {
+                throw new Error('savedVerses is not an array after unsave');
+            }
+        } catch (err) {
+            console.error('Error removing verse from localStorage:', err);
+            showNotification('error unsaving verse');
+            return;
         }
         showNotification('verse unsaved');
         updateSaveButton();
