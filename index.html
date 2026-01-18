@@ -119,7 +119,7 @@
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-content">
             <div class="spinner"></div>
-            <p class="loading-text">keep me or pass me on</p>
+            <p class="loading-text">Keep Me or pass Me on</p>
         </div>
     </div>
 
@@ -127,12 +127,12 @@
     <div class="intro-overlay" id="introOverlay" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="intro-shell">
             <div class="intro-header">
-                <span class="logo-text">You found me!</span>
+                <span class="logo-text">You found Me!</span>
             </div>
             <div class="intro-mascot">
                 <img src="mascot.png" alt="mascot" loading="lazy">
             </div>
-            <button class="intro-button" id="introContinue" type="button">continue</button>
+            <button class="intro-button" id="introContinue" type="button">Continue</button>
         </div>
     </div>
 
@@ -146,8 +146,8 @@
                 <div class="onboard-step">
                     <div class="onboard-circle"></div>
                     <div class="onboard-text">
-                        <div class="onboard-title">step 1</div>
-                        <div class="onboard-body">find me somewhere in a public place—on a sign, bench, or anywhere someone might see me!</div>
+                        <div class="onboard-title">Step 1</div>
+                        <div class="onboard-body">Find Me somewhere in a public place—on a sign, bench, or anywhere someone might see Me    !</div>
                     </div>
                 </div>
                 <div class="onboard-connector">
@@ -156,8 +156,8 @@
                 <div class="onboard-step">
                     <div class="onboard-circle"></div>
                     <div class="onboard-text">
-                        <div class="onboard-title">step 2</div>
-                        <div class="onboard-body">scan the QR code to read a new daily Bible verse every day. enter your zip code to help track where I've been found!</div>
+                        <div class="onboard-title">Step 2</div>
+                        <div class="onboard-body">Scan the QR code to read a new daily Bible verse. Enter your zip code to help track where I've been found!</div>
                     </div>
                 </div>
                 <div class="onboard-connector">
@@ -166,20 +166,20 @@
                 <div class="onboard-step">
                     <div class="onboard-circle"></div>
                     <div class="onboard-text">
-                        <div class="onboard-title">step 3</div>
-                        <div class="onboard-body">keep me for yourself, or pass me on for someone else to find. <b>keep it or pass it on!</b></div>
+                        <div class="onboard-title">Step 3</div>
+                        <div class="onboard-body">Keep Me for yourself, or pass Me on for someone else to find.</div>
                     </div>
                 </div>
             </div>
-            <button class="onboard-button" id="onboardDone" type="button">enter zip code</button>
-            <div class="onboard-link" id="onboardSkip" role="button" tabindex="0">not now</div>
+            <button class="onboard-button" id="onboardDone" type="button">Enter zip code</button>
+            <div class="onboard-link" id="onboardSkip" role="button" tabindex="0">Not now</div>
         </div>
     </div>
 
     <!-- Zip capture overlay -->
     <div class="zip-overlay hidden" id="zipOverlay" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="zip-shell">
-            <div class="zip-header">enter zip code</div>
+            <div class="zip-header">Enter Zip Code</div>
             <div class="zip-input-row">
                 <input type="text" id="zipInput" class="zip-input" placeholder="zip code" inputmode="numeric" maxlength="5" pattern="\d{5}" autocomplete="postal-code" aria-label="zip code" aria-describedby="zipStatus zipNote">
                 <button class="zip-send" id="zipSend" aria-label="submit zip" type="button">
@@ -191,7 +191,7 @@
             </div>
             <div class="zip-status" id="zipStatus"></div>
             <div class="zip-map-preview" id="zipPreviewMap"></div>
-            <button class="zip-submit" id="zipSubmit" type="button">submit</button>
+            <button class="zip-submit" id="zipSubmit" type="button">Submit</button>
             <div class="zip-note" id="zipNote"></div>
         </div>
     </div>
@@ -203,7 +203,7 @@
                 <span class="logo-text">Jesus on <span class="cross-icon">†</span>he move</span>
             </div>
             <div class="zip-fullmap" id="zipFullMap"></div>
-            <button class="zip-close" id="zipFullMapClose" type="button">back</button>
+            <button class="zip-close" id="zipFullMapClose" type="button">Back</button>
         </div>
     </div>
 
@@ -215,16 +215,16 @@
         <main>
             <div class="verse-box" id="verseBox">
                 <div class="daily-verse-view" id="dailyVerseView">
-                    <p class="verse-text" id="verseText">loading today's verse...</p>
+                    <p class="verse-text" id="verseText">Loading today's verse...</p>
                     <p class="verse-reference" id="verseReference"></p>
                 </div>
                 
                 <div class="saved-verses-view" id="savedVersesView">
                     <div class="saved-verses-header">
-                        <h2>saved verses</h2>
+                        <h2>Saved Verses</h2>
                     </div>
                     <div class="saved-verses-container" id="savedVersesContainer">
-                        <p class="no-verses">no saved verses yet. save a verse to see it here!</p>
+                        <p class="no-verses">No saved verses yet. Save a verse to see it here!</p>
                     </div>
                 </div>
             </div>
@@ -252,7 +252,7 @@
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                 </svg>
-                <span>saved verses</span>
+                <span>Saved Verses</span>
             </button>
         </main>
     </div>
