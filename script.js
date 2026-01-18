@@ -704,7 +704,6 @@ function setupAssistBubble() {
         if (bubble) {
             bubble.textContent = bubbleMessage;
             bubble.classList.add('show');
-            setTimeout(() => bubble.classList.remove('show'), 4500);
         }
     };
     if (!hintShown) {
@@ -733,6 +732,10 @@ function setupAssistBubble() {
     };
 
     fab.addEventListener('click', openAssist);
+    // Hide the bubble only when the fab is clicked
+    fab.addEventListener('click', () => {
+        if (bubble) bubble.classList.remove('show');
+    });
 }
 
 // ---------- Streak helpers ----------
