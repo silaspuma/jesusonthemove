@@ -670,24 +670,34 @@ main {
 
 .button-container {
     display: flex;
-    gap: 15px;
+    gap: 8px;
     align-items: stretch;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 15px;
 }
 
 .save-button {
-    flex: 1;
+    width: 50%;
     background: rgba(184, 165, 142, 0.85);
     color: var(--white);
     border: none;
-    padding: 18px 20px;
-    border-radius: var(--border-radius);
+    padding: 18px 0;
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+    border-right: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     box-shadow: var(--shadow-md);
     font-family: 'Playfair Display', serif;
     transition: background 0.2s;
+    margin: 0;
+    border-right: 1px solid var(--beige);
 }
 
 .save-button:hover {
@@ -704,19 +714,25 @@ main {
 }
 
 .share-button {
+    width: 50%;
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: none;
-    padding: 18px 20px;
-    border-radius: var(--border-radius);
+    padding: 18px 0;
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
     cursor: pointer;
     box-shadow: var(--shadow-md);
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     color: var(--primary-color);
     transition: background 0.2s;
+    margin: 0;
 }
 
 .share-button:hover {
@@ -1492,13 +1508,34 @@ footer {
     }
 
     .save-button {
-        padding: 16px 18px;
+        width: 50%;
+        padding: 14px 0;
         min-height: 44px;
+        margin: 0;
+        border-top-left-radius: var(--border-radius);
+        border-bottom-left-radius: var(--border-radius);
+        border-top-right-radius: 16px;
+        border-bottom-right-radius: 16px;
+        border-right: none;
+        border-top-left-radius: var(--border-radius);
+        border-bottom-left-radius: var(--border-radius);
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
     }
 
     .share-button {
-        padding: 16px 18px;
+        width: 50%;
+        padding: 14px 0;
         min-height: 44px;
+        margin: 0;
+        border-top-right-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+        border-top-left-radius: 16px;
+        border-bottom-left-radius: 16px;
+        border-top-right-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
     }
 
     .saved-verses-button {
