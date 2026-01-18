@@ -571,6 +571,19 @@ body {
     align-items: baseline;
 }
 
+/* Only force the first J to be uppercase in .logo-text and .logo */
+.logo-text::first-letter, .logo::first-letter {
+    text-transform: none;
+}
+.logo-text:first-letter, .logo:first-letter {
+    text-transform: uppercase;
+}
+
+/* If you want only the first letter to always be uppercase, even if typed lowercase: */
+.logo-text::first-letter, .logo::first-letter {
+    text-transform: uppercase;
+}
+
 .logo-word {
     font-family: 'Bropella', serif;
     text-transform: lowercase;
